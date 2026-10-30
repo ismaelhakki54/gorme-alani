@@ -179,8 +179,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .perim .dot{position:absolute;border-radius:50%;pointer-events:none}
 .perim .msg{position:absolute;left:50%;top:calc(24px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));text-align:center;font-size:15px;line-height:1.55}
 .perim .msg b{color:#eaeaea}
-.perim .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#2e2e2e}
-.perim .prog i{display:block;height:100%;width:0;background:#4a4a4a}
+.perim .prog{position:absolute;left:0;right:0;bottom:0;height:5px;background:#303030}
+.perim .prog i{display:block;height:100%;width:0;background:#777}
+.perim .pbtn{position:absolute;right:calc(12px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));background:none;border:1px solid #444;color:#888;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+.perim .cnt{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:13px;color:#8a8a8a}
 .perim .pause{position:absolute;inset:0;display:grid;place-content:center;gap:12px;background:rgba(18,18,18,.94);text-align:center;color:#ddd;padding:16px}
 .perim .pause button{background:#3a3a3a;border:1px solid #555;color:#eee;border-radius:8px;padding:10px 16px}
 .perim .pause p{margin:0 0 8px;max-width:40ch}
@@ -214,7 +216,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       <div class="modes" role="group" aria-label="Test türü">
         <button class="mode" id="mFull" aria-pressed="true">
           <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--muted)" stroke-width="1.5"/><path d="M20 15v10M15 20h10" stroke="var(--accent)" stroke-width="2"/><g fill="var(--muted)"><circle cx="10" cy="12" r="1.6"/><circle cx="28" cy="10" r="1.6"/><circle cx="31" cy="27" r="1.6"/><circle cx="11" cy="29" r="1.6"/><circle cx="20" cy="7" r="1.6"/></g><rect x="22" y="23" width="5" height="5" rx="1" fill="var(--unseen)"/></svg>
-          <b>Tam alan</b><span>Lekeyi bulur ve ölçer. 3–5 dk.</span></button>
+          <b>Tam alan</b><span>Lekeyi bulur ve ölçer. 4–6 dk.</span></button>
         <button class="mode" id="mBS" aria-pressed="false">
           <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 20v0" stroke="var(--accent)"/><path d="M8 15v10M3 20h10" stroke="var(--accent)" stroke-width="2"/><ellipse cx="28" cy="21" rx="6" ry="8" fill="none" stroke="var(--accent)" stroke-dasharray="2.5 2"/><circle cx="28" cy="21" r="3.2" fill="var(--unseen)"/></svg>
           <b>Kör nokta doğrulama</b><span>Uygulamanın doğru ölçtüğünü kanıtlar. 4 dk.</span></button>
@@ -228,7 +230,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         <div class="readout" id="cover"></div>
         <div class="row">
           <button class="go" id="start"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Testi başlat</button>
-          <span class="note" style="margin:0">Tam ekran açılır · Esc ile duraklat</span>
+          <span class="note" style="margin:0">Tam ekran açılır · Esc ya da sağ üstteki düğmeyle duraklatılır; yarıda bitirip kaydedebilirsin</span>
         </div>
         <details class="cfg" style="margin-top:16px">
           <summary>Test ayarları</summary>
@@ -329,9 +331,12 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="dot" id="ovDot" hidden></div>
   <div class="msg" id="ovMsg"></div>
   <div class="prog"><i id="ovBar"></i></div>
+  <div class="cnt" id="ovCnt"></div>
+  <button class="pbtn" id="ovPbtn" aria-label="Duraklat">❚❚ Duraklat</button>
   <div class="pause" id="ovPause" hidden>
     <p id="ovPauseTxt">Test duraklatıldı.</p>
     <button id="ovResume">Devam et</button>
+    <button id="ovFinish">Bitir ve kaydet</button>
     <button id="ovAbort">Testi iptal et</button>
   </div>
 </div>
@@ -391,7 +396,7 @@ function userBS(eye){
 function layout(mode,eye,vw,vh){
   const m=14,sign=eye==='R'?1:-1,pts=[];let fx=vw/2,fy=vh/2,sp,want=0;
   if(mode==='full'){sp=S.asp;
-    for(let i=-15;i<15;i++)for(let j=-15;j<15;j++){const tx=(i+.5)*sp,y=(j+.5)*sp;if(Math.abs(tx)>30||Math.abs(y)>24)continue;
+    for(let i=-15;i<15;i++)for(let j=-15;j<15;j++){const tx=(i+.5)*sp,y=(j+.5)*sp;if((tx/25)**2+(y/20)**2>1)continue;
       const px=fx+sign*deg2px(tx),py=fy-deg2px(y);if(px>=m&&px<=vw-m&&py>=m+40&&py<=vh-m)pts.push({tx,y,px,py});}
   }else{sp=1;fx=sign>0?Math.max(40,vw*.06):vw-Math.max(40,vw*.06);
     for(let tx=10;tx<=21;tx++)for(let y=-8;y<=5;y++){want++;const px=fx+sign*deg2px(tx),py=fy-deg2px(y);
@@ -453,6 +458,7 @@ function mapSVG(h,prev){
   if(box)g+=`<rect x="${-box}" y="${-box}" width="${2*box}" height="${2*box}" fill="none" stroke="var(--muted)" stroke-width="${lw}" stroke-dasharray="${fs*.3} ${fs*.25}"/>`;
   const gap=sp*.07;
   for(const [tx,y,s] of pts){const X=sign*tx;
+    if(s===-2)continue;
     if(s===1)g+=`<circle cx="${X}" cy="${-y}" r="${Math.min(sp*.12,fs*.2)}" fill="var(--muted)" opacity=".75"/>`;
     else g+=`<rect x="${X-sp/2+gap}" y="${-y-sp/2+gap}" width="${sp-2*gap}" height="${sp-2*gap}" rx="${sp*.1}" fill="${s===0?'var(--unseen)':s===2?'var(--blur)':'var(--line)'}"/>`}
   if(prev){const pp=mapPoints(prev),ps=prev.eye==='R'?1:-1;
@@ -528,7 +534,7 @@ function renderRes(){
       <h3>Güvenilirlik</h3><div class="tscroll"><table><tbody>
       <tr><td>Sabitleme kaybı</td><td class="n">${flTxt}</td><td class="n">${s.flr===null?'ölçülemedi':fmt(s.flr*100,0)+'%'}</td><td class="n">sınır 20%</td></tr>
       <tr><td>Yanlış pozitif</td><td class="n">${h.fp[0]}/${h.fp[1]}</td><td class="n">${fmt(s.fpr*100,0)}%</td><td class="n">sınır 15%</td></tr></tbody></table></div>
-      <p class="note">${s.u?`Lekenin ağırlık merkezi ${dirText(s.cx,s.cy)}; en uzak görülmeyen nokta ${fmt(s.maxE)}°.`:'Görülmeyen nokta yok.'} Kör nokta (${h.bsRef?.src||'literatür'}) alana katılmadı. ${Math.round(h.dur/60)} dk · ${CON_TR[h.con]||''} parlaklık · ${h.dist} cm.</p>`;
+      <p class="note">${s.u?`Lekenin ağırlık merkezi ${dirText(s.cx,s.cy)}; en uzak görülmeyen nokta ${fmt(s.maxE)}°.`:'Görülmeyen nokta yok.'} Kör nokta (${h.bsRef?.src||'literatür'}) alana katılmadı.${h.partial?' Test yarıda bitirildi; boş kalan bölgeler test edilmedi.':''} ${Math.round(h.dur/60)} dk · ${CON_TR[h.con]||''} parlaklık · ${h.dist} cm.</p>`;
   }else{
     const b=s.bs,R=BS_REF;
     html+=b?`<div class="big"><div><b>${fmt(b.x)}°</b><small>merkez, temporal (lit. ${fmt(R.x)}°)</small></div><div><b>${fmt(b.w,1)}×${fmt(b.h,1)}</b><small>boyut ° (lit. ${fmt(R.w)}×${fmt(R.h)})</small></div><div><b>${fmt(Math.hypot(b.x-R.x,b.y-R.y))}°</b><small>merkez hatası</small></div></div>
@@ -646,12 +652,13 @@ $('imp').onclick=()=>{try{const o=JSON.parse($('io').value),arr=o.hist||o;if(!Ar
   catch(e){toast('Metin okunamadı: yedek metninin tamamını yapıştır')}};
 
 /* ---------- otomatik test motoru ---------- */
-const ov=$('ov'),dot=$('ovDot'),fixEl=$('ovFix'),msg=$('ovMsg'),bar=$('ovBar'),pauseEl=$('ovPause');
+const ov=$('ov'),dot=$('ovDot'),fixEl=$('ovFix'),msg=$('ovMsg'),bar=$('ovBar'),cnt=$('ovCnt'),pauseEl=$('ovPause');
 let RUN=null;
 function onResp(e){
   if(!RUN||RUN.paused)return;
   if(e.type==='keydown'){if(e.key==='Escape'){pause('Test duraklatıldı.');return}if(e.key!==' '&&e.key!=='Enter')return;e.preventDefault();if(e.repeat)return}
   else if(e.target.closest('.pause'))return;
+  else if(e.target.closest('.pbtn')){pause('Test duraklatıldı.');return}
   const t=performance.now();
   if(RUN.waitStart){RUN.waitStart();RUN.waitStart=null;return}
   if(RUN.win&&!RUN.win.hit&&t-RUN.win.t0>=100){RUN.win.hit=true;RUN.win.rt=t-RUN.win.t0}else RUN.spur++;
@@ -660,6 +667,7 @@ function pause(text){if(!RUN||RUN.paused)return;RUN.paused=true;dot.hidden=true;
 $('ovResume').onclick=()=>{if(!RUN)return;pauseEl.hidden=true;ov.classList.add('running');RUN.paused=false;RUN.resume?.()};
 $('ovAbort').onclick=()=>{if(!RUN)return;if(RUN.abortArm&&Date.now()-RUN.abortArm<3000){RUN.abort=true;pauseEl.hidden=true;RUN.paused=false;RUN.resume?.()}
   else{RUN.abortArm=Date.now();$('ovAbort').textContent='Emin misin? Tekrar bas';setTimeout(()=>$('ovAbort').textContent='Testi iptal et',3000)}};
+$('ovFinish').onclick=()=>{if(!RUN)return;RUN.finish=true;pauseEl.hidden=true;RUN.paused=false;RUN.resume?.()};
 document.addEventListener('keydown',e=>{if(RUN)onResp(e)});
 ov.addEventListener('pointerdown',e=>{if(RUN)onResp(e)});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&RUN)pause('Sayfadan çıkıldığı için test duraklatıldı.')});
@@ -686,12 +694,12 @@ async function runTest(){
   const eyeTr=eye==='R'?'Sağ':'Sol';
   msg.innerHTML=`<b>${eyeTr} göz testi.</b> Diğer gözünü kapat ve sarı artıya bak.<br>Nokta görünce <b>boşluk</b> tuşuna bas ya da ekrana dokun.<br>Başlamak için şimdi bir kez bas.`;
   await new Promise(r=>RUN.waitStart=r);
-  msg.innerHTML='';ov.classList.add('running');
+  msg.innerHTML='';cnt.textContent='%0';ov.classList.add('running');
   const res=new Map(),fl=[0,0],fp=[0,0],t0=Date.now();let done=0;
   for(let i=0;i<Q.length;i++){
-    await waitResume();if(RUN.abort)break;
+    await waitResume();if(RUN.abort||RUN.finish)break;
     await sleep(380+Math.random()*520);
-    await waitResume();if(RUN.abort)break;
+    await waitResume();if(RUN.abort||RUN.finish)break;
     const tr=Q[i];
     if(tr.k!=='fp'){const pos=tr.k==='fl'?flPos:tr.p;dot.style.left=(pos.px-size/2)+'px';dot.style.top=(pos.py-size/2)+'px'}
     await frame();if(tr.k!=='fp')dot.hidden=false;
@@ -703,17 +711,19 @@ async function runTest(){
     if(tr.k==='fp'){fp[1]++;if(hit)fp[0]++}
     else if(tr.k==='fl'){fl[1]++;if(hit)fl[0]++}
     else{const key=tr.p.tx+','+tr.p.y;if(hit)res.set(key,1);else if(!tr.re)Q.splice(i+1+Math.floor(Math.random()*(Q.length-i)),0,{...tr,re:true});else res.set(key,0)}
-    done++;bar.style.width=Math.min(100,done/Q.length*100)+'%';
+    done++;const pct=Math.min(100,done/Q.length*100);bar.style.width=pct+'%';
+    const per=(Date.now()-t0)/done,left=Math.max(0,Math.ceil((Q.length-i-1)*per/60000));cnt.textContent=`%${Math.round(pct)} · ${left?'~'+left+' dk kaldı':'bitiyor'}`;
   }
-  const aborted=RUN.abort,spur=RUN.spur;
+  const aborted=RUN.abort,spur=RUN.spur,RUN_finish=RUN.finish;
   await finishOverlay(wake);
   if(aborted){toast('Test iptal edildi, kaydedilmedi');return}
-  const points=[...tested.map(p=>[p.tx,p.y,res.get(p.tx+','+p.y)??0]),...skipped.map(p=>[p.tx,p.y,-1])];
+  const partial=!!RUN_finish;
+  const points=[...tested.map(p=>{const k=p.tx+','+p.y;return [p.tx,p.y,res.has(k)?res.get(k):(partial?-2:0)]}),...skipped.map(p=>[p.tx,p.y,-1])];
   const rec={id:'a'+Date.now().toString(36),type:'auto',mode,date:new Date().toISOString(),eye,sp:L.sp,size:S.asize,con:S.acon,points,
     fl:flPos?fl:[0,0],fp,spur,dist:S.dist,ppm:S.ppm,dur:Math.round((Date.now()-t0)/1000),
-    bsRef:bsRef?{x:+bsRef.x.toFixed(2),y:+bsRef.y.toFixed(2),w:+bsRef.w.toFixed(2),h:+bsRef.h.toFixed(2),src:bsRef.src}:null,screen:[vw,vh]};
+    partial,bsRef:bsRef?{x:+bsRef.x.toFixed(2),y:+bsRef.y.toFixed(2),w:+bsRef.w.toFixed(2),h:+bsRef.h.toFixed(2),src:bsRef.src}:null,screen:[vw,vh]};
   S.hist.push(rec);S.sel=rec.id;S.cmpSel=null;S.view='res';all();scrollTo(0,0);
-  toast(autoStats(rec).reliable?'Test kaydedildi':'Test kaydedildi, ama güvenilirliği düşük');
+  toast(partial?'Yarım test kaydedildi; test edilmeyen noktalar hesaba katılmadı':autoStats(rec).reliable?'Test kaydedildi':'Test kaydedildi, ama güvenilirliği düşük');
 }
 async function finishOverlay(wake){
   try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}
