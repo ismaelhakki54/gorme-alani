@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f6e62">
+</head>
+<body>
+<title>Görme Alanı Haritası</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Atkinson+Hyperlegible+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: test alanı solda (mobilde üstte), sağda sonuç / karşılaştırma / geçmiş paneli. Test sırasında tam ekran karanlık perimetri yüzeyi. */
+:root{
+  --bg:#eef1ef; --paper:#fbfcfb; --ink:#17201e; --muted:#5d6b67; --line:#d3dbd8;
+  --accent:#0f6e62; --accent-ink:#ffffff;
+  --unseen:#c2410c; --blur:#e0a526; --fixed:#2f8f46; --prev:#5b3fb5; --warn:#b45309;
+  --cell-ink:#3b4744; --cell-bg:#fbfcfb; --cell-alt:#f2f5f4;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Atkinson Hyperlegible Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  /* test yüzeyi: tema dışı, sabit */
+  --perim-bg:#262626; --perim-fix:#e8b440; --perim-txt:#a8a8a8;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121816; --paper:#1a2220; --ink:#e4ebe8; --muted:#93a39e; --line:#2e3a37;
+  --accent:#3fb3a2; --accent-ink:#0b1513;
+  --unseen:#f06a35; --blur:#e8b440; --fixed:#55c06b; --prev:#a38cf5; --warn:#f0a040;
+  --cell-ink:#b9c6c2; --cell-bg:#1a2220; --cell-alt:#1e2725; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --paper:#1a2220; --ink:#e4ebe8; --muted:#93a39e; --line:#2e3a37;
+  --accent:#3fb3a2; --accent-ink:#0b1513;
+  --unseen:#f06a35; --blur:#e8b440; --fixed:#55c06b; --prev:#a38cf5; --warn:#f0a040;
+  --cell-ink:#b9c6c2; --cell-bg:#1a2220; --cell-alt:#1e2725; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+h1{font-size:1.35rem;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:700}
+h3{font-size:.95rem;margin:14px 0 6px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}}
+header.top{max-width:1180px;margin:0 auto 16px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between}
+header.top p{margin:0;color:var(--muted);max-width:62ch}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.stack{display:grid;gap:16px;min-width:0}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-4px 0 14px}
+.tabs button{border:0;border-radius:0;background:none;padding:8px 12px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button+button{border-left:1px solid var(--line)}
+button,select,input{font:inherit;color:inherit}
+button{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+button:hover{border-color:var(--muted)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button.small{padding:4px 9px;font-size:.85rem}
+button.danger{color:var(--unseen)}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+.sw.u{background:var(--unseen)} .sw.b{background:var(--blur)} .sw.e{background:transparent;border:1.5px solid currentColor}
+.sw.g{background:var(--line)} .sw.s{background:var(--muted);border-radius:50%;width:7px;height:7px;margin:0 2.5px}
+select,input[type=number],input[type=text]{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+input[type=number]{width:5.5em}
+label.inl{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:.9rem}
+
+/* manuel ızgara */
+.gridbox{container-type:inline-size;width:min(100%,78vh);margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(25,1fr);border:1px solid var(--line);touch-action:none;user-select:none;-webkit-user-select:none;background:var(--cell-bg);cursor:crosshair}
+.c{aspect-ratio:1;display:grid;place-items:center;font-family:var(--f-mono);font-size:2.05cqi;color:var(--cell-ink);
+  border-right:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);position:relative}
+.c.alt{background:var(--cell-alt)}
+.c.v2{background:var(--unseen);color:#fff}
+.c.v1{background:var(--blur);color:#1d1606}
+.c.ov::after{content:"";position:absolute;inset:12%;border:2px solid var(--prev);border-radius:2px;pointer-events:none}
+.c.fx::after{content:"";position:absolute;inset:12%;border:2px dashed var(--fixed);border-radius:2px;pointer-events:none}
+.c.ctr{background:transparent}
+.c.ctr span{font-size:3.4cqi;color:var(--accent);line-height:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.lg-ov{width:12px;height:12px;border:2px solid var(--prev);border-radius:2px}
+.lg-fx{width:12px;height:12px;border:2px dashed var(--fixed);border-radius:2px}
+.lg-ref{width:16px;height:10px;border:1.5px dashed var(--accent);border-radius:50%}
+
+/* otomatik */
+.form{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;margin-bottom:12px}
+.form > label{color:var(--muted);font-size:.9rem}
+@media (max-width:420px){.form{grid-template-columns:1fr}}
+.cover{font-family:var(--f-mono);font-size:.85rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 12px}
+.cover.bad{border-color:var(--warn);color:var(--warn)}
+ol.steps{margin:0 0 12px;padding-left:1.2em;color:var(--muted);font-size:.9rem;display:grid;gap:3px;max-width:65ch}
+.mapwrap{border:1px solid var(--line);border-radius:8px;background:var(--cell-bg);padding:8px;overflow-x:auto}
+.mapwrap svg{display:block;width:100%;height:auto;min-width:280px}
+.maphead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:baseline;margin:16px 0 6px}
+.maphead b{font-size:.95rem}
+.maphead span{color:var(--muted);font-size:.85rem}
+
+/* sonuçlar */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.k{border-top:2px solid var(--line);padding-top:6px;min-width:0}
+.k b{display:block;font-family:var(--f-mono);font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.k small{color:var(--muted);font-size:.78rem}
+.k.u{border-color:var(--unseen)} .k.b{border-color:var(--blur)} .k.ok{border-color:var(--fixed)} .k.bad{border-color:var(--warn)}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;padding:1px 8px;border-radius:999px;border:1.5px solid currentColor}
+.pill.ok{color:var(--fixed)} .pill.bad{color:var(--warn)} .pill.sig{color:var(--unseen)} .pill.ns{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:400;font-size:.8rem}
+td.n,th.n{text-align:right;font-family:var(--f-mono)}
+.tscroll{overflow-x:auto}
+.note{color:var(--muted);font-size:.85rem;margin:8px 0 0}
+.delta-up{color:var(--unseen)} .delta-dn{color:var(--fixed)}
+.hist{display:grid;gap:6px;max-height:380px;overflow:auto}
+.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:8px}
+.hrow.sel{border-color:var(--prev)}
+.hrow .meta{min-width:0;font-size:.88rem}
+.hrow .meta div:last-child{color:var(--muted);font-size:.8rem;font-family:var(--f-mono)}
+.hrow .acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.eye{font-family:var(--f-mono);font-weight:600;font-size:.8rem;border:1.5px solid currentColor;border-radius:6px;padding:1px 6px}
+.eye.R{color:var(--ink)} .eye.L{color:var(--accent)}
+.tag{font-size:.7rem;letter-spacing:.06em;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:6px;white-space:nowrap}
+.tag.ex{border-style:dashed}
+.chart{width:100%;height:auto;display:block}
+details summary{cursor:pointer;color:var(--muted)}
+textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:.78rem;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.cal{height:54px;border:2px solid var(--accent);border-radius:6px;display:grid;place-items:center;color:var(--muted);font-size:.8rem;max-width:100%}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:8px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200;max-width:calc(100% - 32px)}
+.toast.on{opacity:1}
+
+/* tam ekran test yüzeyi */
+.perim{position:fixed;inset:0;background:var(--perim-bg);z-index:100;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;color:var(--perim-txt)}
+.perim.running{cursor:none}
+.perim .fix{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px}
+.perim .fix::before,.perim .fix::after{content:"";position:absolute;background:var(--perim-fix)}
+.perim .fix::before{left:8px;top:0;width:2px;height:18px}
+.perim .fix::after{top:8px;left:0;height:2px;width:18px}
+.perim .dot{position:absolute;border-radius:50%;pointer-events:none}
+.perim .msg{position:absolute;left:50%;top:calc(24px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));text-align:center;font-size:15px;line-height:1.5}
+.perim .msg b{color:#e6e6e6}
+.perim .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#333}
+.perim .prog i{display:block;height:100%;width:0;background:#4f4f4f}
+.perim .pause{position:absolute;inset:0;display:grid;place-content:center;gap:12px;background:rgba(20,20,20,.92);text-align:center;color:#ddd;padding:16px}
+.perim .pause button{background:#3a3a3a;border-color:#555;color:#eee;justify-content:center}
+.perim .pause p{margin:0 0 8px;max-width:40ch}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<header class="top">
+  <h1>Görme Alanı Haritası</h1>
+  <p>Görme alanındaki lekeyi ölç, kaydet ve önceki testlerle karşılaştır. Otomatik test, gözün sabit kalıp kalmadığını kör nokta yoklamasıyla kontrol eder; aynı gün tekrarlanan testlerden “anlamlı değişim” eşiği çıkarır.</p>
+</header>
+
+<div class="wrap">
+  <section class="panel">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabA" aria-selected="true" aria-controls="paneA">Otomatik test</button>
+      <button role="tab" id="tabM" aria-selected="false" aria-controls="paneM">Elle işaretleme</button>
+    </div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Göz">
+        <button id="eyeR" aria-pressed="true">Sağ göz</button>
+        <button id="eyeL" aria-pressed="false">Sol göz</button>
+      </div>
+      <div class="seg" role="group" aria-label="Fırça" id="toolSeg" hidden>
+        <button id="tU" aria-pressed="true"><i class="sw u"></i>Görmüyorum</button>
+        <button id="tB" aria-pressed="false"><i class="sw b"></i>Bulanık</button>
+        <button id="tE" aria-pressed="false"><i class="sw e"></i>Sil</button>
+      </div>
+    </div>
+
+    <div id="paneA" role="tabpanel">
+      <div class="form">
+        <label for="amode">Test</label>
+        <div class="seg" role="group" aria-label="Test türü" id="amode">
+          <button id="amFull" aria-pressed="true">Tam alan</button>
+          <button id="amBS" aria-pressed="false">Kör nokta doğrulama</button>
+        </div>
+        <label for="asp" id="aspL">Nokta aralığı</label>
+        <select id="asp"><option value="3">3° · hızlı</option><option value="2">2° · detaylı</option></select>
+        <label for="asize">Uyaran boyutu</label>
+        <select id="asize"><option value="0.43">Goldmann III · 0,43°</option><option value="0.86">Goldmann IV · 0,86°</option></select>
+        <label for="acon">Parlaklık</label>
+        <select id="acon"><option value="hi">Yüksek</option><option value="mid">Orta</option><option value="lo">Düşük</option></select>
+      </div>
+      <p class="cover" id="cover"></p>
+      <ol class="steps" id="steps"></ol>
+      <div class="row"><button class="primary" id="start">Testi başlat</button><span class="note" style="margin:0">Test tam ekran açılır. Duraklatmak için Esc.</span></div>
+
+      <div class="maphead"><b id="amapTitle">Sonuç haritası</b><span id="amapSub"></span></div>
+      <div class="mapwrap" id="amap"></div>
+      <div class="legend" id="amapLegend">
+        <span><i class="sw u"></i>Görülmeyen</span>
+        <span><i class="sw s"></i>Görülen</span>
+        <span><i class="sw g"></i>Kör nokta, test edilmedi</span>
+        <span><i class="lg-ov"></i>Önceki testte görülmeyen</span>
+        <span id="lgRef"><i class="lg-ref"></i>Literatürdeki kör nokta</span>
+      </div>
+    </div>
+
+    <div id="paneM" role="tabpanel" hidden>
+      <p class="note" style="margin:0 0 10px">Bir gözünü kapat, ortadaki yıldıza bak ve gözünü kaydırmadan okunamayan harfleri sürükleyerek işaretle.</p>
+      <div class="gridbox"><div class="grid" id="grid" aria-label="Test ızgarası, 25 x 25"></div></div>
+      <div class="legend">
+        <span><i class="sw u"></i>Görülmeyen</span>
+        <span><i class="sw b"></i>Bulanık / emin değilim</span>
+        <span><i class="lg-ov"></i>Önceki testte işaretli</span>
+        <span><i class="lg-fx"></i>Önceki testte vardı, şimdi yok</span>
+      </div>
+      <div class="bar" style="margin-top:12px;margin-bottom:0">
+        <button id="undo">Geri al</button>
+        <button id="clear">Temizle</button>
+        <button id="shuffle">Harfleri karıştır</button>
+        <label class="inl"><input type="checkbox" id="showPrev" checked> Önceki testi üstüne çiz</label>
+      </div>
+      <div class="bar" style="margin-top:12px;margin-bottom:0">
+        <input type="text" id="note" placeholder="Not (opsiyonel): ışık, yorgunluk, gözlük…" style="flex:1;min-width:180px">
+        <button class="primary" id="save">Testi kaydet</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="stack">
+    <section class="panel">
+      <h2 id="statsTitle">Bu test</h2>
+      <div id="statsBody"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Karşılaştırma</h2>
+      <div class="row" style="margin-bottom:10px">
+        <label class="inl" for="cmp">Önceki test</label>
+        <select id="cmp" style="flex:1;min-width:0"></select>
+      </div>
+      <div id="cmpOut"></div>
+    </section>
+
+    <section class="panel">
+      <h2 id="trendTitle">Zaman içinde</h2>
+      <div id="trend"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Kayıtlı testler</h2>
+      <div class="hist" id="hist"></div>
+      <details style="margin-top:12px">
+        <summary>Yedekle / geri yükle</summary>
+        <p class="note">Kayıtlar yalnızca bu tarayıcıda tutulur. Aşağıdaki metni kopyalayıp sakla; başka cihazda yapıştırıp “İçe aktar” de.</p>
+        <textarea id="io" spellcheck="false"></textarea>
+        <div class="row" style="margin-top:8px"><button class="small" id="exp">Kopyala</button><button class="small" id="imp">İçe aktar</button></div>
+      </details>
+    </section>
+
+    <section class="panel">
+      <h2>Ölçek ayarı</h2>
+      <div class="row">
+        <label class="inl" for="dist">Göz–ekran mesafesi</label>
+        <input type="number" id="dist" min="15" max="150" step="1" value="40"> <span class="note" style="margin:0">cm</span>
+      </div>
+      <p class="note">Bir banka kartını (85,6 mm) ekrana dayayıp kutunun genişliğini kartla eşitle. Tüm derece hesapları buna göre yapılır; her cihazda bir kez ayarla.</p>
+      <input type="range" id="ppm" min="2.5" max="9" step="0.01" value="3.78" style="width:100%" aria-label="Ekran ölçeği">
+      <div class="cal" id="calbox">85,6 mm</div>
+      <p class="note" id="scaleInfo"></p>
+    </section>
+    <p class="note">Bu bir ev takibi aracıdır, tanı koymaz. Haritada ani büyüme, yeni bir leke veya düz çizgilerde eğrilik fark edersen göz doktoruna başvur.</p>
+  </div>
+</div>
+
+<div class="perim" id="ov" hidden>
+  <div class="fix" id="ovFix"></div>
+  <div class="dot" id="ovDot" hidden></div>
+  <div class="msg" id="ovMsg"></div>
+  <div class="prog"><i id="ovBar"></i></div>
+  <div class="pause" id="ovPause" hidden>
+    <p id="ovPauseTxt">Test duraklatıldı.</p>
+    <button id="ovResume">Devam et</button>
+    <button id="ovAbort">Testi iptal et</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(()=>{
+/* ---------- sabitler ve yardımcılar ---------- */
+const N=25, C=12, CI=C*N+C, TOTAL=N*N-1;
+const KEY='gorme-alani-v1';
+const $=id=>document.getElementById(id);
+const fmt=(x,d=1)=>(Number.isFinite(x)?x:0).toLocaleString('tr-TR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dstr=d=>new Date(d).toLocaleDateString('tr-TR');
+const dtstr=d=>new Date(d).toLocaleString('tr-TR',{dateStyle:'medium',timeStyle:'short'});
+const dayKey=d=>{const x=new Date(d);return x.getFullYear()+'-'+(x.getMonth()+1)+'-'+x.getDate()};
+const LET='ABCDEFGHJKLMNPRSTUVYZ';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const frame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
+const mean=a=>a.reduce((s,v)=>s+v,0)/(a.length||1);
+const sd=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1))};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+// Fizyolojik kör nokta, temporal derece (x>0 = temporal), y>0 = yukarı. Literatür ortalaması.
+const BS_REF={x:15.5,y:-1.5,w:5.5,h:7.5}; BS_REF.area=Math.PI/4*BS_REF.w*BS_REF.h;
+const CON={hi:'#f2f2f2',mid:'#9c9c9c',lo:'#5e5e5e'};
+const CON_TR={hi:'yüksek',mid:'orta',lo:'düşük'};
+
+/* ---------- durum ---------- */
+let S={eye:'R',tool:2,dist:40,ppm:3.78,mask:new Array(N*N).fill(0),hist:[],cmp:null,showPrev:true,
+  tab:'auto',amode:'full',asp:3,asize:0.43,acon:'mid',selAuto:null,cmpAuto:null};
+try{const raw=localStorage.getItem(KEY);if(raw){Object.assign(S,JSON.parse(raw))}}catch(e){}
+S.hist.forEach(h=>{if(!h.type)h.type='manual'});
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+/* ---------- örnek kayıtlar ---------- */
+function exMask(cells){const m=new Array(N*N).fill(0);cells.forEach(([r,c,v])=>m[r*N+c]=v);return m.join('')}
+if(!S._seeded){
+  const a=[],b=[];
+  for(let r=16;r<=19;r++)for(let c=9;c<=11;c++)a.push([r,c,(r==16||c==9)?1:2]);
+  for(let r=15;r<=20;r++)for(let c=8;c<=12;c++){if(r==15&&c==12)continue;b.push([r,c,(r==15||r==20||c==8||c==12)?1:2])}
+  S.hist.push(
+    {id:'ex1',type:'manual',date:'2026-09-21T10:00:00',eye:'R',mask:exMask(a),cellDeg:1.27,note:'Örnek kayıt',ex:true},
+    {id:'ex2',type:'manual',date:'2026-10-14T10:00:00',eye:'R',mask:exMask(b),cellDeg:1.27,note:'Örnek kayıt',ex:true});
+  S._seeded=true;
+}
+function exAuto(id,date,cx,cy,rx,ry,fl,fp){
+  const sp=3,pts=[];
+  for(let i=-8;i<8;i++)for(let j=-5;j<5;j++){const tx=(i+.5)*sp,y=(j+.5)*sp;
+    if(inBS(tx,y,BS_REF))pts.push([tx,y,-1]);
+    else pts.push([tx,y,(((tx-cx)/rx)**2+((y-cy)/ry)**2<=1)?0:1]);}
+  return {id,type:'auto',mode:'full',date,eye:'R',sp,size:.43,con:'mid',points:pts,fl:[fl,14],fp:[fp,14],spur:1,dist:40,dur:262,bsRef:{...BS_REF},note:'Örnek kayıt',ex:true};
+}
+if(!S._seededAuto){
+  S.hist.push(exAuto('ex3','2026-10-14T10:20:00',-3,-6.5,4.6,4.2,1,0), exAuto('ex4','2026-10-28T10:20:00',-3,-6.5,5.6,4.9,2,1));
+  S.selAuto=S.selAuto||'ex4'; S._seededAuto=true;
+}
+
+/* ---------- geometri ---------- */
+const deg2px=d=>Math.tan(d*Math.PI/180)*S.dist*10*S.ppm;
+const px2deg=p=>Math.atan(p/S.ppm/(S.dist*10))*180/Math.PI;
+function inBS(tx,y,ref,margin=1){return ((tx-ref.x)/(ref.w/2+margin))**2+((y-ref.y)/(ref.h/2+margin))**2<=1}
+// Kullanıcının kendi ölçtüğü kör nokta (güvenilir doğrulama testlerinin ortalaması), yoksa literatür.
+function userBS(eye){
+  const v=S.hist.filter(h=>h.type==='auto'&&h.mode==='bs'&&h.eye===eye&&!h.ex).map(autoStats).filter(s=>s.bs&&s.reliable);
+  if(!v.length)return {...BS_REF,src:'literatür'};
+  return {x:mean(v.map(s=>s.bs.x)),y:mean(v.map(s=>s.bs.y)),w:mean(v.map(s=>s.bs.w)),h:mean(v.map(s=>s.bs.h)),src:`senin ${v.length} ölçümün`};
+}
+function layout(mode,eye,vw,vh){
+  const m=14, sign=eye==='R'?1:-1, pts=[];
+  let fx=vw/2, fy=vh/2, sp, want=0;
+  if(mode==='full'){
+    sp=S.asp;
+    for(let i=-15;i<15;i++)for(let j=-15;j<15;j++){
+      const tx=(i+.5)*sp,y=(j+.5)*sp; if(Math.abs(tx)>30||Math.abs(y)>24)continue;
+      const px=fx+sign*deg2px(tx),py=fy-deg2px(y);
+      if(px>=m&&px<=vw-m&&py>=m+40&&py<=vh-m)pts.push({tx,y,px,py});
+    }
+  }else{
+    sp=1; fx=sign>0?Math.max(40,vw*.06):vw-Math.max(40,vw*.06);
+    for(let tx=10;tx<=21;tx++)for(let y=-8;y<=5;y++){want++;
+      const px=fx+sign*deg2px(tx),py=fy-deg2px(y);
+      if(px>=m&&px<=vw-m&&py>=m+40&&py<=vh-m)pts.push({tx,y,px,py});}
+  }
+  const ext={x0:px2deg(Math.min(fx,vw-fx)-m),xT:px2deg((sign>0?vw-fx:fx)-m),xN:px2deg((sign>0?fx:vw-fx)-m),y:px2deg(vh/2-m-40)};
+  return {fx,fy,sp,pts,want,ext,sign};
+}
+
+/* ---------- istatistik ---------- */
+function manualStats(mask,cd,eye){
+  let u=0,b=0,sx=0,sy=0,w=0,maxE=0;const q={UT:[0,0],UN:[0,0],AT:[0,0],AN:[0,0]};
+  for(let i=0;i<N*N;i++){const v=mask[i];if(!v||i===CI)continue;
+    const r=Math.floor(i/N),c=i%N,dx=c-C,dy=C-r,tx=eye==='R'?dx:-dx;
+    if(v===2)u++;else b++;
+    const ww=v===2?1:.5;sx+=tx*ww;sy+=dy*ww;w+=ww;maxE=Math.max(maxE,Math.hypot(dx,dy));
+    q[(dy>0?'U':'A')+(tx>0?'T':'N')][v===2?0:1]++;}
+  return {u,b,pu:u/TOTAL*100,pb:b/TOTAL*100,area:u*cd*cd,cx:w?sx/w*cd:0,cy:w?sy/w*cd:0,maxE:maxE*cd,q,cd};
+}
+function autoStats(rec){
+  const sp=rec.sp,pts=rec.points;let tot=0,u=0,sx=0,sy=0,maxE=0;const q={UT:[0,0],UN:[0,0],AT:[0,0],AN:[0,0]};
+  const un=[];
+  for(const [tx,y,s] of pts){if(s<0)continue;tot++;if(s===0){u++;un.push([tx,y]);sx+=tx;sy+=y;maxE=Math.max(maxE,Math.hypot(tx,y));q[(y>0?'U':'A')+(tx>0?'T':'N')][0]++}}
+  const flr=rec.fl&&rec.fl[1]?rec.fl[0]/rec.fl[1]:null, fpr=rec.fp&&rec.fp[1]?rec.fp[0]/rec.fp[1]:0;
+  const reliable=(flr===null||flr<=.2)&&fpr<=.15;
+  const r={tot,u,pu:tot?u/tot*100:0,area:u*sp*sp,cx:u?sx/u:0,cy:u?sy/u:0,maxE,q,flr,fpr,reliable};
+  if(rec.mode==='bs'){
+    if(u){const xs=un.map(p=>p[0]),ys=un.map(p=>p[1]);
+      r.bs={x:mean(xs),y:mean(ys),w:Math.max(...xs)-Math.min(...xs)+sp,h:Math.max(...ys)-Math.min(...ys)+sp,area:u*sp*sp};}
+    else r.bs=null;
+  }
+  return r;
+}
+// Tekrarlanabilirlik: aynı gün yapılmış ≥3 test → 2,77 × SD (Bland-Altman tekrarlanabilirlik katsayısı)
+function repeatability(eye,mode,sp,metric){
+  const recs=S.hist.filter(h=>h.type==='auto'&&h.eye===eye&&h.mode===mode&&(mode==='bs'||h.sp===sp));
+  const days={};recs.forEach(h=>{const s=autoStats(h);if(!s.reliable)return;(days[dayKey(h.date)]??=[]).push({h,s})});
+  const groups=Object.values(days).filter(g=>g.length>=3).sort((a,b)=>b[0].h.date.localeCompare(a[0].h.date));
+  if(!groups.length)return null;
+  const g=groups[0],vals=g.map(x=>metric(x.s)).filter(Number.isFinite);
+  return {cor:2.77*sd(vals),sd:sd(vals),n:vals.length,day:g[0].h.date,mean:mean(vals)};
+}
+
+/* ---------- manuel ızgara ---------- */
+const grid=$('grid');const cells=[];
+function letters(){for(let i=0;i<N*N;i++){if(i===CI)continue;cells[i].textContent=LET[Math.floor(Math.random()*LET.length)]}}
+for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+  const d=document.createElement('div');const i=r*N+c;d.className='c'+(((r+c)&1)?' alt':'');d.dataset.i=i;
+  if(i===CI){d.classList.add('ctr');d.innerHTML='<span aria-label="Sabitleme noktası">★</span>'}
+  grid.appendChild(d);cells.push(d);
+}
+letters();
+let lastCd=1.27;
+const cellDeg=()=>{const w=grid.getBoundingClientRect().width;if(w>0){lastCd=2*Math.atan(w/N/S.ppm/2/(S.dist*10))*180/Math.PI}return lastCd};
+const decode=s=>s.split('').map(Number);
+const byId=id=>S.hist.find(h=>h.id===id)||null;
+
+function paintGrid(){
+  const p=byId(S.cmp);const pm=(p&&p.type==='manual'&&S.showPrev)?decode(p.mask):null;
+  for(let i=0;i<N*N;i++){if(i===CI)continue;const v=S.mask[i],el=cells[i];
+    el.classList.toggle('v2',v===2);el.classList.toggle('v1',v===1);
+    const pv=pm?pm[i]:0;el.classList.toggle('ov',pv>0&&v>0);el.classList.toggle('fx',pv>0&&v===0);}
+}
+const QN={UT:'Üst temporal',UN:'Üst nazal',AT:'Alt temporal',AN:'Alt nazal'};
+function dirText(x,y){if(Math.hypot(x,y)<.3)return 'merkezde';
+  const v=y>0.3?'yukarı':y<-0.3?'aşağı':'';const h=Math.abs(x)>0.3?(x>0?'temporal':'nazal'):'';
+  return [v,h].filter(Boolean).join('-')+' yönde';}
+const dlt=(x,y,d=1)=>{const v=y-x;const cls=v>1e-4?'delta-up':v<-1e-4?'delta-dn':'';return `<span class="${cls}">${v>0?'+':''}${fmt(v,d)}</span>`};
+
+/* ---------- render: manuel ---------- */
+function renderManual(){
+  const cd=cellDeg();const s=manualStats(S.mask,cd,S.eye);
+  $('statsTitle').textContent='Bu test · elle işaretleme';
+  $('statsBody').innerHTML=`<div class="kpis">
+    <div class="k u"><b>${s.u}</b><small>görülmeyen hücre · ${fmt(s.pu)}%</small></div>
+    <div class="k b"><b>${s.b}</b><small>bulanık hücre · ${fmt(s.pb)}%</small></div>
+    <div class="k"><b>${fmt(s.area)}</b><small>alan, derece² (görülmeyen)</small></div></div>
+    <div class="tscroll"><table style="margin-top:14px"><thead><tr><th>Kadran</th><th class="n">Görülmeyen</th><th class="n">Bulanık</th><th class="n">Alan °²</th></tr></thead>
+    <tbody>${Object.keys(QN).map(k=>`<tr><td>${QN[k]}</td><td class="n">${s.q[k][0]}</td><td class="n">${s.q[k][1]}</td><td class="n">${fmt(s.q[k][0]*cd*cd)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="note">${(s.u+s.b)?`Ağırlık merkezi sabitleme noktasının ${fmt(Math.hypot(s.cx,s.cy))}° ${dirText(s.cx,s.cy)}. En uzak işaretli hücre ${fmt(s.maxE)}°. Bir hücre ≈ ${fmt(cd,2)}°.`:`İşaretli hücre yok. Bir hücre ≈ ${fmt(cd,2)}°.`}</p>`;
+  // karşılaştırma
+  const same=S.hist.filter(h=>h.type==='manual'&&h.eye===S.eye).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!same.find(h=>h.id===S.cmp))S.cmp=same[0]?.id||null;
+  fillCmp(same,S.cmp);
+  const p=byId(S.cmp);
+  if(!p){$('cmpOut').innerHTML='<p class="note">Bu göz için kayıtlı elle işaretleme olunca burada fark görünür.</p>';return}
+  const pm=decode(p.mask);const ps=manualStats(pm,cd,p.eye);
+  let add=0,gone=0,both=0;for(let i=0;i<N*N;i++){const a=pm[i]>0,b=S.mask[i]>0;if(a&&b)both++;else if(b)add++;else if(a)gone++;}
+  const days=Math.round((Date.now()-new Date(p.date))/864e5);
+  $('cmpOut').innerHTML=`<div class="tscroll"><table><thead><tr><th></th><th class="n">Önceki</th><th class="n">Şimdi</th><th class="n">Fark</th></tr></thead><tbody>
+   <tr><td>Görülmeyen %</td><td class="n">${fmt(ps.pu)}</td><td class="n">${fmt(s.pu)}</td><td class="n">${dlt(ps.pu,s.pu)}</td></tr>
+   <tr><td>Bulanık %</td><td class="n">${fmt(ps.pb)}</td><td class="n">${fmt(s.pb)}</td><td class="n">${dlt(ps.pb,s.pb)}</td></tr>
+   <tr><td>Alan °²</td><td class="n">${fmt(ps.area)}</td><td class="n">${fmt(s.area)}</td><td class="n">${dlt(ps.area,s.area)}</td></tr>
+  </tbody></table></div>
+  <p class="note">${days} gün önceki teste göre: <b class="delta-up">${add}</b> yeni hücre, <b class="delta-dn">${gone}</b> hücre artık işaretsiz, ${both} hücre iki testte de işaretli. Elle işaretlemede anlamlılık hesaplanmaz; bunun için otomatik testi kullan.</p>`;
+}
+function fillCmp(list,sel){
+  const el=$('cmp');
+  el.innerHTML=list.length?list.map(h=>`<option value="${h.id}"${h.id===sel?' selected':''}>${dtstr(h.date)}${h.ex?' (örnek)':''}</option>`).join(''):'<option>Bu göz için kayıt yok</option>';
+  el.disabled=!list.length;
+}
+
+/* ---------- render: otomatik ---------- */
+function autoMap(rec,prev){
+  const sign=rec.eye==='R'?1:-1,sp=rec.sp,P=rec.points;
+  const xs=P.map(p=>sign*p[0]),ys=P.map(p=>p[1]);
+  let x0=Math.min(0,...xs)-sp,x1=Math.max(0,...xs)+sp,y0=Math.min(0,...ys)-sp,y1=Math.max(0,...ys)+sp;
+  if(rec.mode==='bs'){const r=BS_REF;x0=Math.min(x0,sign*r.x-r.w);x1=Math.max(x1,sign*r.x+r.w);}
+  const W=x1-x0,H=y1-y0,fs=Math.max(W,H*1.4)/42,lw=fs*.08;
+  let g='';
+  for(let v=Math.ceil(x0/10)*10;v<=x1;v+=10)g+=`<line x1="${v}" x2="${v}" y1="${-y1}" y2="${-y0}" stroke="var(--line)" stroke-width="${v===0?lw*1.6:lw}"/>`;
+  for(let v=Math.ceil(y0/10)*10;v<=y1;v+=10)g+=`<line y1="${-v}" y2="${-v}" x1="${x0}" x2="${x1}" stroke="var(--line)" stroke-width="${v===0?lw*1.6:lw}"/>`;
+  for(let v=Math.ceil(x0/10)*10;v<=x1;v+=10)if(v)g+=`<text x="${v+fs*.25}" y="${-y0-fs*.35}" font-size="${fs*.8}" fill="var(--muted)" font-family="var(--f-mono)">${Math.abs(v)}°</text>`;
+  const gap=sp*.08;
+  for(const [tx,y,s] of P){const X=sign*tx;
+    if(s===0)g+=`<rect x="${X-sp/2+gap}" y="${-y-sp/2+gap}" width="${sp-2*gap}" height="${sp-2*gap}" rx="${sp*.08}" fill="var(--unseen)"/>`;
+    else if(s<0)g+=`<rect x="${X-sp/2+gap}" y="${-y-sp/2+gap}" width="${sp-2*gap}" height="${sp-2*gap}" rx="${sp*.08}" fill="var(--line)"/>`;
+    else g+=`<circle cx="${X}" cy="${-y}" r="${Math.min(sp*.13,fs*.22)}" fill="var(--muted)"/>`;}
+  if(prev&&prev.sp===sp&&prev.mode===rec.mode){const ps=prev.eye==='R'?1:-1;
+    for(const [tx,y,s] of prev.points)if(s===0){const X=ps*tx;g+=`<rect x="${X-sp/2+gap*2}" y="${-y-sp/2+gap*2}" width="${sp-4*gap}" height="${sp-4*gap}" rx="${sp*.06}" fill="none" stroke="var(--prev)" stroke-width="${sp*.07}"/>`}}
+  if(rec.mode==='bs'){const r=BS_REF;g+=`<ellipse cx="${sign*r.x}" cy="${-r.y}" rx="${r.w/2}" ry="${r.h/2}" fill="none" stroke="var(--accent)" stroke-width="${lw*1.6}" stroke-dasharray="${fs*.4} ${fs*.3}"/>`;}
+  const c=fs*.6;g+=`<path d="M${-c} 0H${c}M0 ${-c}V${c}" stroke="var(--accent)" stroke-width="${lw*2.5}"/>`;
+  const tL=sign>0?'Nazal':'Temporal',tR=sign>0?'Temporal':'Nazal';
+  g+=`<text x="${x0+fs*.3}" y="${-y1+fs*1}" font-size="${fs*.85}" fill="var(--muted)">${tL}</text><text x="${x1-fs*.3}" y="${-y1+fs*1}" text-anchor="end" font-size="${fs*.85}" fill="var(--muted)">${tR}</text>`;
+  return `<svg viewBox="${x0} ${-y1} ${W} ${H}" role="img" aria-label="Görme alanı sonuç haritası">${g}</svg>`;
+}
+function relPill(s){return s.reliable?'<span class="pill ok">GÜVENİLİR</span>':'<span class="pill bad">ŞÜPHELİ</span>'}
+function renderAuto(){
+  // ayarlar
+  $('amFull').setAttribute('aria-pressed',S.amode==='full');$('amBS').setAttribute('aria-pressed',S.amode==='bs');
+  $('asp').value=String(S.asp);$('asize').value=String(S.asize);$('acon').value=S.acon;
+  $('asp').hidden=$('aspL').hidden=S.amode!=='full';
+  $('lgRef').hidden=S.amode!=='bs';
+  const L=layout(S.amode,S.eye,window.screen?.width||innerWidth,window.screen?.height||innerHeight);
+  const n=L.pts.filter(p=>!(S.amode==='full'&&inBS(p.tx,p.y,userBS(S.eye)))).length;
+  const mins=Math.max(1,Math.round(n*1.25*1.15/60*(1+1/6)));
+  const cv=$('cover');
+  if(S.amode==='full'){
+    cv.className='cover';cv.textContent=`Bu ekran ve ${S.dist} cm mesafede: yatay ±${fmt(L.ext.x0,0)}°, dikey ±${fmt(L.ext.y,0)}° · ${n} nokta · yaklaşık ${mins} dk`;
+  }else{
+    const ok=L.pts.length>=L.want*.9;
+    cv.className='cover'+(ok?'':' bad');
+    cv.textContent=ok?`Kör nokta bölgesi (temporal 10–21°, −8…+5°) ekrana sığıyor · ${L.pts.length} nokta, 1° aralık · yaklaşık ${mins} dk`
+      :`Kör nokta bölgesinin yalnızca ${L.pts.length}/${L.want} noktası ekrana sığıyor. Ekrana biraz yaklaş (mesafeyi azalt) ya da daha geniş bir ekran kullan.`;
+  }
+  const other=S.eye==='R'?'sol':'sağ', eyeTr=S.eye==='R'?'Sağ':'Sol';
+  $('steps').innerHTML=[
+    `Ekranla gözün arasını ${S.dist} cm'ye sabitle, ışığı loş tut. Gözlüğün varsa tak.`,
+    `${other[0].toUpperCase()+other.slice(1)} gözünü kapat ya da elinle ört. ${eyeTr} göz açık kalsın.`,
+    S.amode==='full'?'Test boyunca yalnızca sarı artıya bak. Gözünü noktaları aramak için kaydırma.':'Sarı artı ekranın kenarında olacak. Yalnızca ona bak; noktalar yan tarafta çıkar.',
+    'Bir nokta yanıp söndüğünü fark ettiğin an boşluk tuşuna bas ya da ekranın herhangi bir yerine dokun.',
+    'Emin olmadığında basma. Bazı denemelerde bilerek hiçbir şey gösterilmez.'
+  ].map(t=>`<li>${t}</li>`).join('');
+
+  // seçili sonuç
+  const autos=S.hist.filter(h=>h.type==='auto');
+  let rec=byId(S.selAuto);
+  if(!rec||rec.type!=='auto'||rec.eye!==S.eye||rec.mode!==S.amode){
+    rec=autos.filter(h=>h.eye===S.eye&&h.mode===S.amode).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;S.selAuto=rec?.id||null;}
+  const same=autos.filter(h=>rec&&h.id!==rec.id&&h.eye===rec.eye&&h.mode===rec.mode&&h.sp===rec.sp&&h.date<rec.date).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!same.find(h=>h.id===S.cmpAuto))S.cmpAuto=same[0]?.id||null;
+  const prev=byId(S.cmpAuto);
+  $('statsTitle').textContent=S.amode==='bs'?'Bu test · kör nokta doğrulama':'Bu test · otomatik tam alan';
+  if(!rec){
+    $('amap').innerHTML=`<p class="note" style="margin:8px">${S.eye==='R'?'Sağ':'Sol'} göz için ${S.amode==='bs'?'kör nokta doğrulaması':'otomatik test'} henüz yok. “Testi başlat”a bas; sonuç haritası burada görünür.</p>`;
+    $('amapSub').textContent='';$('statsBody').innerHTML='<p class="note" style="margin:0">Test bitince alan, yüzde ve güvenilirlik burada çıkar.</p>';
+    fillCmp([],null);$('cmpOut').innerHTML='<p class="note">Aynı göz ve aynı test türünden ikinci kayıt olunca burada fark görünür.</p>';return;
+  }
+  $('amap').innerHTML=autoMap(rec,prev);
+  $('amapTitle').textContent=(rec.mode==='bs'?'Kör nokta haritası':'Sonuç haritası')+' · '+(rec.eye==='R'?'sağ göz':'sol göz');
+  $('amapSub').innerHTML=`${dtstr(rec.date)}${rec.ex?' · örnek':''}${prev?` · mor çerçeve: ${dstr(prev.date)}`:''}`;
+  const s=autoStats(rec);
+  const flTxt=rec.fl&&rec.fl[1]?`${rec.fl[0]}/${rec.fl[1]}`:'yok';
+  let html=`<div class="kpis">
+    <div class="k u"><b>${fmt(s.pu)}%</b><small>${s.u}/${s.tot} nokta görülmedi</small></div>
+    <div class="k"><b>${fmt(s.area,0)}</b><small>alan, derece²</small></div>
+    <div class="k ${s.reliable?'ok':'bad'}"><b style="font-size:1.05rem;padding-top:.3rem">${relPill(s)}</b><small>sabitleme kaybı ${flTxt} · yanlış pozitif ${rec.fp[0]}/${rec.fp[1]}</small></div></div>`;
+  if(rec.mode==='full'){
+    html+=`<div class="tscroll"><table style="margin-top:14px"><thead><tr><th>Kadran</th><th class="n">Görülmeyen</th><th class="n">Alan °²</th></tr></thead>
+      <tbody>${Object.keys(QN).map(k=>`<tr><td>${QN[k]}</td><td class="n">${s.q[k][0]}</td><td class="n">${fmt(s.q[k][0]*rec.sp*rec.sp,0)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="note">${s.u?`Ağırlık merkezi sabitleme noktasının ${fmt(Math.hypot(s.cx,s.cy))}° ${dirText(s.cx,s.cy)}. En uzak görülmeyen nokta ${fmt(s.maxE)}°.`:'Görülmeyen nokta yok.'} Kör nokta bölgesi (${rec.bsRef?.src||'literatür'}) hesaba katılmadı. ${rec.fl&&rec.fl[1]?'':'Kör nokta ekrana sığmadığı için sabitleme yoklaması yapılamadı.'} Süre ${Math.round(rec.dur/60)} dk · ${CON_TR[rec.con]||''} parlaklık · ${rec.dist} cm.</p>`;
+  }else{
+    const b=s.bs,R=BS_REF;
+    html+=b?`<div class="tscroll"><table style="margin-top:14px"><thead><tr><th></th><th class="n">Ölçülen</th><th class="n">Literatür</th><th class="n">Fark</th></tr></thead><tbody>
+      <tr><td>Merkez, temporal</td><td class="n">${fmt(b.x)}°</td><td class="n">${fmt(R.x)}°</td><td class="n">${dlt(R.x,b.x)}°</td></tr>
+      <tr><td>Merkez, dikey</td><td class="n">${fmt(b.y)}°</td><td class="n">${fmt(R.y)}°</td><td class="n">${dlt(R.y,b.y)}°</td></tr>
+      <tr><td>Genişlik</td><td class="n">${fmt(b.w)}°</td><td class="n">${fmt(R.w)}°</td><td class="n">${dlt(R.w,b.w)}°</td></tr>
+      <tr><td>Yükseklik</td><td class="n">${fmt(b.h)}°</td><td class="n">${fmt(R.h)}°</td><td class="n">${dlt(R.h,b.h)}°</td></tr>
+      <tr><td>Alan</td><td class="n">${fmt(b.area,0)}°²</td><td class="n">${fmt(R.area,0)}°²</td><td class="n">${dlt(R.area,b.area,0)}°²</td></tr>
+      </tbody></table></div>
+      <p class="note">Literatür değerleri yetişkin ortalamasıdır; kişiden kişiye merkez ±1–2°, boyut ±1–1,5° oynar. Merkez hatası ${fmt(Math.hypot(b.x-R.x,b.y-R.y))}°.</p>`
+      :'<p class="note">Kör nokta bulunamadı. Gözün sabit kalmamış ya da mesafe yanlış olabilir; ayarları kontrol edip tekrarla.</p>';
+    const ra=repeatability(rec.eye,'bs',1,x=>x.bs?.area),rx=repeatability(rec.eye,'bs',1,x=>x.bs?.x),ry=repeatability(rec.eye,'bs',1,x=>x.bs?.y);
+    html+=`<h3>Tekrarlanabilirlik</h3>`+(ra?`<div class="tscroll"><table><thead><tr><th></th><th class="n">Ortalama</th><th class="n">SD</th><th class="n">Katsayı</th></tr></thead><tbody>
+      <tr><td>Alan °²</td><td class="n">${fmt(ra.mean,0)}</td><td class="n">${fmt(ra.sd)}</td><td class="n">±${fmt(ra.cor)}</td></tr>
+      <tr><td>Merkez temporal °</td><td class="n">${fmt(rx.mean)}</td><td class="n">${fmt(rx.sd,2)}</td><td class="n">±${fmt(rx.cor,2)}</td></tr>
+      <tr><td>Merkez dikey °</td><td class="n">${fmt(ry.mean)}</td><td class="n">${fmt(ry.sd,2)}</td><td class="n">±${fmt(ry.cor,2)}</td></tr></tbody></table></div>
+      <p class="note">${dstr(ra.day)} günündeki ${ra.n} güvenilir testten. Katsayı = 2,77 × SD; iki test arasındaki fark bunun altındaysa ölçüm gürültüsüdür.</p>`
+      :`<p class="note">Aynı gün en az 3 güvenilir kör nokta testi yapınca alan ve merkez için tekrarlanabilirlik katsayısı burada hesaplanır.</p>`);
+  }
+  $('statsBody').innerHTML=html;
+
+  // karşılaştırma
+  fillCmp(same,S.cmpAuto);
+  if(!prev){$('cmpOut').innerHTML='<p class="note">Bu sonuçtan önce aynı göz, aynı test türü ve aynı nokta aralığıyla yapılmış kayıt yok.</p>';return}
+  const ps=autoStats(prev);
+  const key=p=>p[0]+','+p[1];const pmap=new Map(prev.points.map(p=>[key(p),p[2]]));
+  let add=0,gone=0,both=0;for(const p of rec.points){const a=pmap.get(key(p));if(a===undefined||a<0||p[2]<0)continue;if(a===0&&p[2]===0)both++;else if(p[2]===0)add++;else if(a===0)gone++;}
+  const metric=rec.mode==='bs'?(x=>x.bs?.area):(x=>x.area);
+  const rep=repeatability(rec.eye,rec.mode,rec.sp,metric);
+  const curA=rec.mode==='bs'?(s.bs?.area||0):s.area, prA=rec.mode==='bs'?(ps.bs?.area||0):ps.area;
+  const dA=curA-prA;
+  const verdict=rep?(Math.abs(dA)>rep.cor?`<span class="pill sig">ANLAMLI DEĞİŞİM</span> Alan farkı ${fmt(Math.abs(dA),0)}°², tekrarlanabilirlik sınırı ±${fmt(rep.cor,0)}°².`:`<span class="pill ns">GÜRÜLTÜ İÇİNDE</span> Alan farkı ${fmt(Math.abs(dA),0)}°², tekrarlanabilirlik sınırı ±${fmt(rep.cor,0)}°².`)
+    :'Anlamlılık için aynı gün bu ayarla en az 3 güvenilir test yap; sınır o testlerden hesaplanır.';
+  const days=Math.round((new Date(rec.date)-new Date(prev.date))/864e5);
+  const warn=(!s.reliable||!ps.reliable)?' <b style="color:var(--warn)">Testlerden biri şüpheli; farkı temkinli yorumla.</b>':'';
+  $('cmpOut').innerHTML=`<div class="tscroll"><table><thead><tr><th></th><th class="n">Önceki</th><th class="n">Bu test</th><th class="n">Fark</th></tr></thead><tbody>
+   <tr><td>Görülmeyen %</td><td class="n">${fmt(ps.pu)}</td><td class="n">${fmt(s.pu)}</td><td class="n">${dlt(ps.pu,s.pu)}</td></tr>
+   <tr><td>Alan °²</td><td class="n">${fmt(prA,0)}</td><td class="n">${fmt(curA,0)}</td><td class="n">${dlt(prA,curA,0)}</td></tr>
+   ${rec.mode==='full'?`<tr><td>Merkeze uzaklık °</td><td class="n">${fmt(Math.hypot(ps.cx,ps.cy))}</td><td class="n">${fmt(Math.hypot(s.cx,s.cy))}</td><td class="n">${dlt(Math.hypot(ps.cx,ps.cy),Math.hypot(s.cx,s.cy))}</td></tr>`:''}
+  </tbody></table></div>
+  <p class="note">${verdict}</p>
+  <p class="note">${days} gün arayla: <b class="delta-up">${add}</b> yeni görülmeyen nokta, <b class="delta-dn">${gone}</b> nokta artık görülüyor, ${both} nokta iki testte de görülmedi.${warn}</p>`;
+}
+
+/* ---------- trend ve geçmiş ---------- */
+function seriesValue(h){if(h.type==='manual')return manualStats(decode(h.mask),h.cellDeg,h.eye).pu;const s=autoStats(h);return s.pu}
+function renderTrend(){
+  const box=$('trend');const auto=S.tab==='auto';
+  const pick=h=>auto?(h.type==='auto'&&h.mode==='full'):h.type==='manual';
+  $('trendTitle').textContent=auto?'Zaman içinde · otomatik tam alan, görülmeyen %':'Zaman içinde · elle işaretleme, görülmeyen %';
+  const pts=S.hist.filter(pick).sort((a,b)=>a.date.localeCompare(b.date)).map(h=>({h,v:seriesValue(h)}));
+  if(pts.length<2){box.innerHTML='<p class="note">En az iki kayıt olunca grafik çizilir.</p>';return}
+  const W=360,H=150,L=34,R=10,T=10,B=26;
+  const t0=+new Date(pts[0].h.date),t1=Math.max(+new Date(pts[pts.length-1].h.date),t0+864e5);
+  const ymaxRaw=Math.max(...pts.map(p=>p.v),1);const step=ymaxRaw>20?10:ymaxRaw>10?5:ymaxRaw>4?2:1;const ymax=Math.ceil(ymaxRaw/step)*step;
+  const X=t=>L+(W-L-R)*((t-t0)/(t1-t0)),Y=v=>T+(H-T-B)*(1-v/ymax);
+  let g='';for(let v=0;v<=ymax;v+=step){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--f-mono)">${v}</text>`}
+  g+=`<text x="${L}" y="${H-6}" font-size="10" fill="var(--muted)">${dstr(t0)}</text><text x="${W-R}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)">${dstr(t1)}</text>`;
+  ['R','L'].forEach(e=>{const ps=pts.filter(p=>p.h.eye===e);if(!ps.length)return;const col=e==='R'?'var(--ink)':'var(--accent)';
+    if(ps.length>1)g+=`<polyline fill="none" stroke="${col}" stroke-width="2" points="${ps.map(p=>X(+new Date(p.h.date))+','+Y(p.v)).join(' ')}"/>`;
+    ps.forEach((p,k)=>g+=`<circle cx="${X(+new Date(p.h.date))}" cy="${Y(p.v)}" r="${k===ps.length-1?4.5:3}" fill="${k===ps.length-1?col:'var(--paper)'}" stroke="${col}" stroke-width="2"><title>${dstr(p.h.date)} · ${fmt(p.v)}%</title></circle>`);});
+  box.innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Görülmeyen alan yüzdesi zaman içinde">${g}</svg>
+  <div class="legend"><span><i class="sw" style="background:var(--ink)"></i>Sağ göz</span><span><i class="sw" style="background:var(--accent)"></i>Sol göz</span></div>`;
+}
+function renderHist(){
+  const list=S.hist.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  if(!list.length){$('hist').innerHTML='<p class="note">Henüz kayıt yok.</p>';return}
+  $('hist').innerHTML=list.map(h=>{
+    let tag,meta;
+    if(h.type==='manual'){const s=manualStats(decode(h.mask),h.cellDeg,h.eye);tag='ELLE';meta=`${fmt(s.pu)}% · ${fmt(s.area)}°² · bulanık ${s.b}`}
+    else{const s=autoStats(h);tag=h.mode==='bs'?'KÖR NOKTA':'OTOMATİK '+h.sp+'°';
+      meta=h.mode==='bs'?(s.bs?`merkez ${fmt(s.bs.x)}°/${fmt(s.bs.y)}° · ${fmt(s.bs.area,0)}°²`:'kör nokta bulunamadı'):`${fmt(s.pu)}% · ${fmt(s.area,0)}°²`;
+      meta+=s.reliable?' · güvenilir':' · şüpheli';}
+    const sel=(h.id===S.selAuto&&S.tab==='auto')||(h.id===S.cmp&&S.tab==='manual')||(h.id===S.cmpAuto&&S.tab==='auto');
+    return `<div class="hrow${sel?' sel':''}"><span class="eye ${h.eye}">${h.eye==='R'?'SAĞ':'SOL'}</span>
+    <div class="meta"><div>${dtstr(h.date)}<span class="tag">${tag}</span>${h.ex?'<span class="tag ex">ÖRNEK</span>':''}</div>
+    <div>${meta}${h.note&&!h.ex?' · '+esc(h.note):''}</div></div>
+    <div class="acts"><button class="small" data-a="load" data-id="${h.id}">Aç</button><button class="small danger" data-a="del" data-id="${h.id}">Sil</button></div></div>`}).join('');
+}
+
+function all(){
+  const auto=S.tab==='auto';
+  $('tabA').setAttribute('aria-selected',auto);$('tabM').setAttribute('aria-selected',!auto);
+  $('paneA').hidden=!auto;$('paneM').hidden=auto;$('toolSeg').hidden=auto;
+  $('eyeR').setAttribute('aria-pressed',S.eye==='R');$('eyeL').setAttribute('aria-pressed',S.eye==='L');
+  if(auto)renderAuto();else{paintGrid();renderManual()}
+  $('scaleInfo').textContent=`Bu ayarla 1 cm ekran ≈ ${fmt(px2deg(10*S.ppm),2)}°. Elle işaretleme ızgarası ±${fmt(cellDeg()*N/2)}° kapsıyor.`;
+  renderTrend();renderHist();persist();
+}
+
+/* ---------- manuel boyama ---------- */
+let painting=false,pval=0,undo=[];
+const idxAt=(x,y)=>{const el=document.elementFromPoint(x,y);const c=el&&el.closest&&el.closest('.c');return c?+c.dataset.i:-1};
+function setCell(i){if(i<0||i===CI||S.mask[i]===pval)return;S.mask[i]=pval;const el=cells[i];el.classList.toggle('v2',pval===2);el.classList.toggle('v1',pval===1);}
+grid.addEventListener('pointerdown',e=>{const i=idxAt(e.clientX,e.clientY);if(i<0||i===CI)return;
+  undo.push(S.mask.slice());if(undo.length>60)undo.shift();
+  pval=(S.tool!==0&&S.mask[i]===S.tool)?0:S.tool;painting=true;grid.setPointerCapture(e.pointerId);setCell(i);e.preventDefault();});
+grid.addEventListener('pointermove',e=>{if(painting)setCell(idxAt(e.clientX,e.clientY))});
+const endPaint=()=>{if(painting){painting=false;all()}};
+grid.addEventListener('pointerup',endPaint);grid.addEventListener('pointercancel',endPaint);
+
+/* ---------- kontroller ---------- */
+$('tabA').onclick=()=>{S.tab='auto';all()};$('tabM').onclick=()=>{S.tab='manual';all()};
+const setEye=e=>{S.eye=e;S.cmp=null;S.selAuto=null;S.cmpAuto=null;all()};
+$('eyeR').onclick=()=>setEye('R');$('eyeL').onclick=()=>setEye('L');
+const setTool=t=>{S.tool=t;[['tU',2],['tB',1],['tE',0]].forEach(([id,v])=>$(id).setAttribute('aria-pressed',v===t));persist()};
+$('tU').onclick=()=>setTool(2);$('tB').onclick=()=>setTool(1);$('tE').onclick=()=>setTool(0);
+$('undo').onclick=()=>{if(undo.length){S.mask=undo.pop();all()}};
+let clearArm=0;$('clear').onclick=()=>{if(Date.now()-clearArm<3000){undo.push(S.mask.slice());S.mask.fill(0);$('clear').textContent='Temizle';all()}else{clearArm=Date.now();$('clear').textContent='Emin misin? Tekrar bas';setTimeout(()=>$('clear').textContent='Temizle',3000)}};
+$('shuffle').onclick=letters;
+$('showPrev').onchange=e=>{S.showPrev=e.target.checked;all()};
+$('cmp').onchange=e=>{if(S.tab==='auto')S.cmpAuto=e.target.value;else S.cmp=e.target.value;all()};
+$('dist').oninput=e=>{const v=+e.target.value;if(v>=15&&v<=150){S.dist=v;all()}};
+const cal=()=>{$('calbox').style.width=(85.6*S.ppm)+'px'};
+$('ppm').oninput=e=>{S.ppm=+e.target.value;cal();all()};
+$('amFull').onclick=()=>{S.amode='full';S.selAuto=null;S.cmpAuto=null;all()};
+$('amBS').onclick=()=>{S.amode='bs';S.selAuto=null;S.cmpAuto=null;all()};
+$('asp').onchange=e=>{S.asp=+e.target.value;all()};
+$('asize').onchange=e=>{S.asize=+e.target.value;all()};
+$('acon').onchange=e=>{S.acon=e.target.value;all()};
+let toastT;function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2400)}
+$('save').onclick=()=>{
+  const prevId=S.hist.filter(h=>h.type==='manual'&&h.eye===S.eye).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null;
+  S.hist.push({id:'t'+Date.now().toString(36),type:'manual',date:new Date().toISOString(),eye:S.eye,mask:S.mask.join(''),cellDeg:+cellDeg().toFixed(4),dist:S.dist,note:$('note').value.trim()});
+  S.cmp=prevId;$('note').value='';all();toast('Test kaydedildi');
+};
+const armed={};
+$('hist').onclick=e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.id,h=byId(id);if(!h)return;
+  if(b.dataset.a==='load'){
+    S.eye=h.eye;
+    if(h.type==='auto'){S.tab='auto';S.amode=h.mode;S.selAuto=id;S.cmpAuto=null;}
+    else{undo.push(S.mask.slice());S.tab='manual';S.mask=decode(h.mask);
+      const o=S.hist.filter(x=>x.type==='manual'&&x.eye===h.eye&&x.id!==id&&x.date<h.date).sort((a,b)=>b.date.localeCompare(a.date))[0];S.cmp=o?o.id:null;}
+    all();toast('Kayıt açıldı');
+  }else if(b.dataset.a==='del'){
+    if(armed[id]&&Date.now()-armed[id]<3000){S.hist=S.hist.filter(x=>x.id!==id);if(S.cmp===id)S.cmp=null;if(S.selAuto===id)S.selAuto=null;if(S.cmpAuto===id)S.cmpAuto=null;all();toast('Kayıt silindi')}
+    else{armed[id]=Date.now();b.textContent='Emin misin?'}
+  }
+};
+$('exp').onclick=()=>{const t=JSON.stringify({v:2,hist:S.hist.filter(h=>!h.ex)});$('io').value=t;
+  const fb=()=>{$('io').select();toast('Metni seçip kopyala')};
+  try{navigator.clipboard.writeText(t).then(()=>toast('Panoya kopyalandı'),fb)}catch(e){fb()}};
+$('imp').onclick=()=>{try{const o=JSON.parse($('io').value);const arr=o.hist||o;if(!Array.isArray(arr))throw 0;
+  let n=0;arr.forEach(h=>{if(!h||!h.id||S.hist.find(x=>x.id===h.id))return;if(!h.type)h.type='manual';
+    if((h.type==='manual'&&h.mask?.length===N*N)||(h.type==='auto'&&Array.isArray(h.points))){S.hist.push(h);n++}});all();toast(n+' kayıt eklendi')}
+  catch(e){toast('Metin okunamadı: yedekten kopyaladığın metnin tamamını yapıştır')}};
+
+/* ---------- otomatik test motoru ---------- */
+const ov=$('ov'),dot=$('ovDot'),fixEl=$('ovFix'),msg=$('ovMsg'),bar=$('ovBar'),pauseEl=$('ovPause');
+let RUN=null;
+function onResp(e){
+  if(!RUN||RUN.paused)return;
+  if(e.type==='keydown'){if(e.key==='Escape'){pause('Test duraklatıldı.');return}if(e.key!==' '&&e.key!=='Enter')return;e.preventDefault();if(e.repeat)return}
+  else if(e.target.closest('.pause'))return;
+  const t=performance.now();
+  if(RUN.waitStart){RUN.waitStart();RUN.waitStart=null;return}
+  if(RUN.win&&!RUN.win.hit&&t-RUN.win.t0>=100){RUN.win.hit=true;RUN.win.rt=t-RUN.win.t0}
+  else RUN.spur++;
+}
+function pause(text){if(!RUN||RUN.paused)return;RUN.paused=true;dot.hidden=true;$('ovPauseTxt').textContent=text;pauseEl.hidden=false;ov.classList.remove('running')}
+$('ovResume').onclick=()=>{if(!RUN)return;pauseEl.hidden=true;ov.classList.add('running');RUN.paused=false;RUN.resume?.()};
+$('ovAbort').onclick=()=>{if(!RUN)return;if(RUN.abortArm&&Date.now()-RUN.abortArm<3000){RUN.abort=true;pauseEl.hidden=true;RUN.paused=false;RUN.resume?.()}
+  else{RUN.abortArm=Date.now();$('ovAbort').textContent='Emin misin? Tekrar bas';setTimeout(()=>$('ovAbort').textContent='Testi iptal et',3000)}};
+document.addEventListener('keydown',e=>{if(RUN)onResp(e)});
+ov.addEventListener('pointerdown',e=>{if(RUN)onResp(e)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&RUN)pause('Sayfadan çıkıldığı için test duraklatıldı.')});
+// Tarayıcı Esc ile tam ekrandan çıkınca keydown gelmeyebilir; testi duraklat.
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&RUN&&!RUN.waitStart)pause('Tam ekrandan çıkıldı. Ekran boyutu değiştiyse testi iptal edip yeniden başlat.')});
+
+async function waitResume(){while(RUN.paused&&!RUN.abort)await new Promise(r=>RUN.resume=r)}
+async function runTest(){
+  if(RUN)return;
+  ov.hidden=false;pauseEl.hidden=true;bar.style.width='0';
+  try{await ov.requestFullscreen?.()}catch(e){}
+  let wake=null;try{wake=await navigator.wakeLock?.request('screen')}catch(e){}
+  await sleep(350);
+  const vw=ov.clientWidth,vh=ov.clientHeight,eye=S.eye,mode=S.amode;
+  const L=layout(mode,eye,vw,vh);
+  const bsRef=mode==='full'?userBS(eye):null;
+  const tested=[],skipped=[];
+  L.pts.forEach(p=>{(mode==='full'&&inBS(p.tx,p.y,bsRef)?skipped:tested).push(p)});
+  if(tested.length<8){await finishOverlay(wake);toast('Bu ekran ve mesafede yeterli nokta sığmıyor. Mesafeyi azalt ya da daha büyük ekran kullan.');return}
+  // sabitleme yoklama noktası
+  let flPos=null;
+  if(mode==='full'){const px=L.fx+L.sign*deg2px(bsRef.x),py=L.fy-deg2px(bsRef.y);if(px>10&&px<vw-10&&py>10&&py<vh-10)flPos={px,py}}
+  const nC=Math.max(3,Math.round(tested.length/12));
+  let Q=shuffle(tested.map(p=>({k:'stim',p,re:false})));
+  const ins=t=>Q.splice(3+Math.floor(Math.random()*Math.max(1,Q.length-3)),0,t);
+  for(let i=0;i<nC;i++){ins({k:'fp'});if(flPos)ins({k:'fl'})}
+  const size=Math.max(3,deg2px(S.asize));
+  dot.style.width=dot.style.height=size+'px';dot.style.background=CON[S.acon];
+  fixEl.style.left=L.fx+'px';fixEl.style.top=L.fy+'px';
+  RUN={paused:false,abort:false,spur:0,win:null,waitStart:null};
+  const eyeTr=eye==='R'?'sağ':'sol';
+  msg.innerHTML=`<b>${eyeTr[0].toUpperCase()+eyeTr.slice(1)} göz testi.</b> Diğer gözünü kapat ve sarı artıya bak.<br>Nokta görünce <b>boşluk</b> tuşuna bas ya da ekrana dokun.<br>Başlamak için şimdi bir kez bas.`;
+  await new Promise(r=>RUN.waitStart=r);
+  msg.innerHTML='';ov.classList.add('running');
+  const res=new Map(),fl=[0,0],fp=[0,0],t0=Date.now();let done=0;const totalTrials=()=>Q.length;
+  for(let i=0;i<Q.length;i++){
+    await waitResume();if(RUN.abort)break;
+    await sleep(380+Math.random()*520);
+    await waitResume();if(RUN.abort)break;
+    const tr=Q[i];
+    if(tr.k!=='fp'){const pos=tr.k==='fl'?flPos:tr.p;dot.style.left=(pos.px-size/2)+'px';dot.style.top=(pos.py-size/2)+'px'}
+    await frame();
+    if(tr.k!=='fp')dot.hidden=false;
+    RUN.win={t0:performance.now(),hit:false};
+    await sleep(200);dot.hidden=true;
+    while(performance.now()-RUN.win.t0<1150&&!RUN.win.hit&&!RUN.paused)await sleep(15);
+    if(RUN.paused){ // yarım kalan denemeyi sona ekle
+      Q.push(tr);RUN.win=null;continue;}
+    const hit=RUN.win.hit;RUN.win=null;
+    if(tr.k==='fp'){fp[1]++;if(hit)fp[0]++}
+    else if(tr.k==='fl'){fl[1]++;if(hit)fl[0]++}
+    else{const key=tr.p.tx+','+tr.p.y;
+      if(hit)res.set(key,1);
+      else if(!tr.re){Q.splice(i+1+Math.floor(Math.random()*(Q.length-i)),0,{...tr,re:true})}
+      else res.set(key,0);}
+    done++;bar.style.width=Math.min(100,done/totalTrials()*100)+'%';
+  }
+  const aborted=RUN.abort;const spur=RUN.spur;
+  await finishOverlay(wake);
+  if(aborted){toast('Test iptal edildi, kaydedilmedi');return}
+  const points=[...tested.map(p=>[p.tx,p.y,res.get(p.tx+','+p.y)??0]),...skipped.map(p=>[p.tx,p.y,-1])];
+  const prevId=S.hist.filter(h=>h.type==='auto'&&h.eye===eye&&h.mode===mode&&h.sp===L.sp).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null;
+  const rec={id:'a'+Date.now().toString(36),type:'auto',mode,date:new Date().toISOString(),eye,sp:L.sp,size:S.asize,con:S.acon,points,
+    fl:flPos?fl:[0,0],fp,spur,dist:S.dist,ppm:S.ppm,dur:Math.round((Date.now()-t0)/1000),bsRef:bsRef?{x:+bsRef.x.toFixed(2),y:+bsRef.y.toFixed(2),w:+bsRef.w.toFixed(2),h:+bsRef.h.toFixed(2),src:bsRef.src}:null,
+    screen:[vw,vh]};
+  S.hist.push(rec);S.selAuto=rec.id;S.cmpAuto=prevId;S.tab='auto';all();
+  toast(autoStats(rec).reliable?'Test kaydedildi':'Test kaydedildi, ama güvenilirliği düşük');
+}
+async function finishOverlay(wake){
+  try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}
+  try{await wake?.release()}catch(e){}
+  ov.classList.remove('running');ov.hidden=true;dot.hidden=true;RUN=null;
+}
+$('start').onclick=runTest;
+
+/* ---------- başlangıç ---------- */
+$('dist').value=S.dist;$('ppm').value=S.ppm;$('showPrev').checked=S.showPrev;cal();setTool(S.tool);
+new ResizeObserver(()=>{if(S.tab==='manual')renderManual()}).observe(grid);
+all();
+// test için dışa açık saf fonksiyonlar
+window.__GA={autoStats,manualStats,layout,inBS,repeatability,BS_REF};
+})();
+</script>
+
+</body>
+</html>

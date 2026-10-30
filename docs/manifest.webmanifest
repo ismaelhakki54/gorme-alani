@@ -1,0 +1,9 @@
+{
+  "name": "Görme Alanı Haritası",
+  "short_name": "Görme Alanı",
+  "lang": "tr",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#eef1ef",
+  "theme_color": "#0f6e62"
+}
