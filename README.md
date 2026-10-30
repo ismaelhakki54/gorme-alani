@@ -1,4 +1,4 @@
-# Görme Alanı Haritası
+# Odak · Görme Alanı Takibi
 
 Evde görme alanı takibi için tarayıcıda çalışan bir PWA. Görme alanındaki lekeyi ölçer, kaydeder ve önceki testlerle karşılaştırır. Aynı gün tekrarlanan testlerden "anlamlı değişim" eşiğini hesaplar.
 

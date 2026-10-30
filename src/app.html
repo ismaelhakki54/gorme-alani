@@ -1,268 +1,327 @@
-<title>Görme Alanı Haritası</title>
+<title>Odak</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Atkinson+Hyperlegible+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: test alanı solda (mobilde üstte), sağda sonuç / karşılaştırma / geçmiş paneli. Test sırasında tam ekran karanlık perimetri yüzeyi. */
+/* Layout: cihaz ekranı. Üstte marka + göz seçici, ortada tek ekran (Test / Sonuçlar / Geçmiş / Ayarlar), telefonda alt menü. Koyu öncelikli; açık tema bir rapor kâğıdı gibi. */
 :root{
-  --bg:#eef1ef; --paper:#fbfcfb; --ink:#17201e; --muted:#5d6b67; --line:#d3dbd8;
-  --accent:#0f6e62; --accent-ink:#ffffff;
-  --unseen:#c2410c; --blur:#e0a526; --fixed:#2f8f46; --prev:#5b3fb5; --warn:#b45309;
-  --cell-ink:#3b4744; --cell-bg:#fbfcfb; --cell-alt:#f2f5f4;
+  --bg:#0d1113; --panel:#151b1e; --raise:#1c2427; --ink:#e6ebe8; --muted:#8b9893; --line:#263034;
+  --accent:#f2b134; --accent-ink:#1a1204;
+  --unseen:#ff5b4f; --blur:#d9a23a; --ok:#5fd38a; --warn:#ff9447; --prev:#5cc8e0;
+  --cell-ink:#a9b5b0; --cell-bg:#121719; --cell-alt:#161c1f;
+  --f-disp:"Chakra Petch","Segoe UI",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"Atkinson Hyperlegible Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
-  /* test yüzeyi: tema dışı, sabit */
-  --perim-bg:#262626; --perim-fix:#e8b440; --perim-txt:#a8a8a8;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --perim-bg:#222; --perim-fix:#f2b134; --perim-txt:#a8a8a8;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#121816; --paper:#1a2220; --ink:#e4ebe8; --muted:#93a39e; --line:#2e3a37;
-  --accent:#3fb3a2; --accent-ink:#0b1513;
-  --unseen:#f06a35; --blur:#e8b440; --fixed:#55c06b; --prev:#a38cf5; --warn:#f0a040;
-  --cell-ink:#b9c6c2; --cell-bg:#1a2220; --cell-alt:#1e2725; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#121816; --paper:#1a2220; --ink:#e4ebe8; --muted:#93a39e; --line:#2e3a37;
-  --accent:#3fb3a2; --accent-ink:#0b1513;
-  --unseen:#f06a35; --blur:#e8b440; --fixed:#55c06b; --prev:#a38cf5; --warn:#f0a040;
-  --cell-ink:#b9c6c2; --cell-bg:#1a2220; --cell-alt:#1e2725; color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#f1f2ee; --panel:#fbfbf8; --raise:#ecede8; --ink:#141816; --muted:#5f6864; --line:#d6d9d2;
+  --accent:#a86a0c; --accent-ink:#ffffff;
+  --unseen:#cf2f25; --blur:#b9821c; --ok:#1f8a4c; --warn:#c25a10; --prev:#1679a0;
+  --cell-ink:#3c4541; --cell-bg:#fbfbf8; --cell-alt:#f2f3ee; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f1f2ee; --panel:#fbfbf8; --raise:#ecede8; --ink:#141816; --muted:#5f6864; --line:#d6d9d2;
+  --accent:#a86a0c; --accent-ink:#ffffff;
+  --unseen:#cf2f25; --blur:#b9821c; --ok:#1f8a4c; --warn:#c25a10; --prev:#1679a0;
+  --cell-ink:#3c4541; --cell-bg:#fbfbf8; --cell-alt:#f2f3ee; color-scheme:light}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
-h1{font-size:1.35rem;margin:0;text-wrap:balance;letter-spacing:-.01em}
-h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:700}
-h3{font-size:.95rem;margin:14px 0 6px}
-.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
-@media (max-width:860px){.wrap{grid-template-columns:1fr}}
-header.top{max-width:1180px;margin:0 auto 16px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between}
-header.top p{margin:0;color:var(--muted);max-width:62ch}
-.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
-.stack{display:grid;gap:16px;min-width:0}
-
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-4px 0 14px}
-.tabs button{border:0;border-radius:0;background:none;padding:8px 12px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
-
-.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:0;border-radius:0}
-.seg button+button{border-left:1px solid var(--line)}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+@media (min-width:760px){body{padding-block:0 48px}}
 button,select,input{font:inherit;color:inherit}
-button{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
-button:hover{border-color:var(--muted)}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
-button.small{padding:4px 9px;font-size:.85rem}
-button.danger{color:var(--unseen)}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* üst bar */
+.app{max-width:1080px;margin:0 auto}
+.top{display:flex;align-items:center;gap:14px;padding-block:18px 14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand svg{width:34px;height:34px;flex:none}
+.brand b{font-family:var(--f-disp);font-weight:700;font-size:1.55rem;letter-spacing:.06em;line-height:1}
+.brand small{display:block;font-family:var(--f-mono);font-size:.68rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.eyes{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.eyes button{border:0;background:none;border-radius:999px;padding:6px 14px;font-family:var(--f-disp);font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.eyes button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+nav.views{display:flex;gap:4px}
+nav.views button{border:0;background:none;padding:8px 12px;border-radius:8px;color:var(--muted);font-family:var(--f-disp);font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:.85rem;display:inline-flex;align-items:center;gap:7px}
+nav.views button svg{width:18px;height:18px}
+nav.views button[aria-current="page"]{color:var(--ink);background:var(--raise)}
+@media (max-width:759px){
+  nav.views{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--panel);border-top:1px solid var(--line);justify-content:space-around;
+    padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  nav.views button{flex-direction:column;gap:2px;font-size:.66rem;padding:6px 8px}
+  nav.views button[aria-current="page"]{background:none;color:var(--accent)}
+}
+
+/* genel */
+.view{display:grid;gap:16px}
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.eyebrow{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h2{font-family:var(--f-disp);font-weight:600;font-size:1.3rem;letter-spacing:.02em;margin:0 0 6px;text-wrap:balance;line-height:1.2}
+h3{font-family:var(--f-disp);font-weight:600;font-size:1rem;letter-spacing:.03em;margin:18px 0 8px}
+.lead{color:var(--muted);margin:0;max-width:62ch}
+.note{color:var(--muted);font-size:.85rem;margin:10px 0 0;max-width:68ch}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* test türü seçici */
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+@media (max-width:560px){.modes{grid-template-columns:1fr}}
+.mode{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;background:var(--raise);border:1.5px solid transparent;border-radius:12px;padding:14px;min-width:0}
+.mode svg{grid-row:span 2;width:38px;height:38px}
+.mode b{font-family:var(--f-disp);font-weight:600;letter-spacing:.03em}
+.mode span{color:var(--muted);font-size:.82rem;line-height:1.35}
+.mode[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--raise))}
+details.cfg{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+details.cfg summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+.form{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;margin-top:12px}
+.form label{color:var(--muted);font-size:.88rem}
+@media (max-width:420px){.form{grid-template-columns:1fr}}
+select,input[type=number],input[type=text]{background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+input[type=number]{width:6em}
+.readout{font-family:var(--f-mono);font-size:.82rem;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:9px 12px;margin:14px 0}
+.readout.bad{border-left-color:var(--warn);color:var(--warn)}
+ol.steps{margin:0 0 16px;padding:0;list-style:none;display:grid;gap:8px;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;font-size:.92rem}
+ol.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:.75rem;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);margin-top:1px}
+.go{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:14px 22px;font-family:var(--f-disp);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:1rem}
+.go svg{width:20px;height:20px}
+.btn{background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:7px 12px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.sm{padding:4px 10px;font-size:.84rem}
+.btn.danger{color:var(--unseen)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg .btn{border:0;border-radius:0}
+.seg .btn+.btn{border-left:1px solid var(--line)}
 .sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
-.sw.u{background:var(--unseen)} .sw.b{background:var(--blur)} .sw.e{background:transparent;border:1.5px solid currentColor}
-.sw.g{background:var(--line)} .sw.s{background:var(--muted);border-radius:50%;width:7px;height:7px;margin:0 2.5px}
-select,input[type=number],input[type=text]{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
-input[type=number]{width:5.5em}
-label.inl{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:.9rem}
+.sw.u{background:var(--unseen)} .sw.b{background:var(--blur)} .sw.e{border:1.5px solid currentColor}
+.sw.g{background:var(--line)} .sw.s{background:var(--muted);border-radius:50%;width:6px;height:6px;margin:0 3px}
+.lg-ov{width:12px;height:12px;border:2px solid var(--prev);border-radius:2px}
+.lg-ref{width:16px;height:10px;border:1.5px dashed var(--accent);border-radius:50%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
 
 /* manuel ızgara */
-.gridbox{container-type:inline-size;width:min(100%,78vh);margin:0 auto}
+.gridbox{container-type:inline-size;width:min(100%,74vh);margin:14px auto 0}
 .grid{display:grid;grid-template-columns:repeat(25,1fr);border:1px solid var(--line);touch-action:none;user-select:none;-webkit-user-select:none;background:var(--cell-bg);cursor:crosshair}
-.c{aspect-ratio:1;display:grid;place-items:center;font-family:var(--f-mono);font-size:2.05cqi;color:var(--cell-ink);
-  border-right:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);position:relative}
+.c{aspect-ratio:1;display:grid;place-items:center;font-family:var(--f-mono);font-size:2cqi;color:var(--cell-ink);
+  border-right:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent);position:relative}
 .c.alt{background:var(--cell-alt)}
 .c.v2{background:var(--unseen);color:#fff}
 .c.v1{background:var(--blur);color:#1d1606}
-.c.ov::after{content:"";position:absolute;inset:12%;border:2px solid var(--prev);border-radius:2px;pointer-events:none}
-.c.fx::after{content:"";position:absolute;inset:12%;border:2px dashed var(--fixed);border-radius:2px;pointer-events:none}
-.c.ctr{background:transparent}
 .c.ctr span{font-size:3.4cqi;color:var(--accent);line-height:1}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--muted);margin-top:10px}
-.legend span{display:inline-flex;gap:6px;align-items:center}
-.lg-ov{width:12px;height:12px;border:2px solid var(--prev);border-radius:2px}
-.lg-fx{width:12px;height:12px;border:2px dashed var(--fixed);border-radius:2px}
-.lg-ref{width:16px;height:10px;border:1.5px dashed var(--accent);border-radius:50%}
-
-/* otomatik */
-.form{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;margin-bottom:12px}
-.form > label{color:var(--muted);font-size:.9rem}
-@media (max-width:420px){.form{grid-template-columns:1fr}}
-.cover{font-family:var(--f-mono);font-size:.85rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 12px}
-.cover.bad{border-color:var(--warn);color:var(--warn)}
-ol.steps{margin:0 0 12px;padding-left:1.2em;color:var(--muted);font-size:.9rem;display:grid;gap:3px;max-width:65ch}
-.mapwrap{border:1px solid var(--line);border-radius:8px;background:var(--cell-bg);padding:8px;overflow-x:auto}
-.mapwrap svg{display:block;width:100%;height:auto;min-width:280px}
-.maphead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:baseline;margin:16px 0 6px}
-.maphead b{font-size:.95rem}
-.maphead span{color:var(--muted);font-size:.85rem}
+.mini{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--f-mono);font-size:.85rem;color:var(--muted);margin-top:12px}
+.mini b{color:var(--ink);font-weight:600}
 
 /* sonuçlar */
-.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.k{border-top:2px solid var(--line);padding-top:6px;min-width:0}
-.k b{display:block;font-family:var(--f-mono);font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
-.k small{color:var(--muted);font-size:.78rem}
-.k.u{border-color:var(--unseen)} .k.b{border-color:var(--blur)} .k.ok{border-color:var(--fixed)} .k.bad{border-color:var(--warn)}
-.pill{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;padding:1px 8px;border-radius:999px;border:1.5px solid currentColor}
-.pill.ok{color:var(--fixed)} .pill.bad{color:var(--warn)} .pill.sig{color:var(--unseen)} .pill.ns{color:var(--muted)}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
-th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}
-th{color:var(--muted);font-weight:400;font-size:.8rem}
+.reshead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.chip{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--muted);white-space:nowrap}
+.chip.ex{border-style:dashed}
+.map{background:var(--cell-bg);border:1px solid var(--line);border-radius:10px;padding:6px;overflow-x:auto}
+.map svg{display:block;width:100%;height:auto;min-width:280px}
+.big{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:6px}
+.big div{min-width:0}
+.big b{display:block;font-family:var(--f-disp);font-weight:600;font-size:2rem;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.big small{color:var(--muted);font-size:.78rem;display:block}
+.big .u b{color:var(--unseen)}
+.status{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-disp);font-weight:700;letter-spacing:.08em;font-size:.8rem;padding:4px 10px;border-radius:6px}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.status.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.status.bad{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.status.sig{color:var(--unseen);background:color-mix(in srgb,var(--unseen) 14%,transparent)}
+.status.ns{color:var(--muted);background:var(--raise)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem}
+th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:400;font-size:.76rem;font-family:var(--f-mono);letter-spacing:.04em}
 td.n,th.n{text-align:right;font-family:var(--f-mono)}
 .tscroll{overflow-x:auto}
-.note{color:var(--muted);font-size:.85rem;margin:8px 0 0}
-.delta-up{color:var(--unseen)} .delta-dn{color:var(--fixed)}
-.hist{display:grid;gap:6px;max-height:380px;overflow:auto}
-.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:8px}
-.hrow.sel{border-color:var(--prev)}
-.hrow .meta{min-width:0;font-size:.88rem}
-.hrow .meta div:last-child{color:var(--muted);font-size:.8rem;font-family:var(--f-mono)}
-.hrow .acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
-.eye{font-family:var(--f-mono);font-weight:600;font-size:.8rem;border:1.5px solid currentColor;border-radius:6px;padding:1px 6px}
-.eye.R{color:var(--ink)} .eye.L{color:var(--accent)}
-.tag{font-size:.7rem;letter-spacing:.06em;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:6px;white-space:nowrap}
-.tag.ex{border-style:dashed}
+.up{color:var(--unseen)} .dn{color:var(--ok)}
+.verdict{display:grid;gap:8px;background:var(--raise);border-radius:10px;padding:12px 14px;margin-top:12px}
+.verdict p{margin:0;font-size:.88rem;color:var(--muted)}
 .chart{width:100%;height:auto;display:block}
+
+/* geçmiş */
+.hist{display:grid;gap:8px}
+.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;background:var(--raise);border:1.5px solid transparent;border-radius:10px}
+.hrow.sel{border-color:var(--accent)}
+.hrow .meta{min-width:0}
+.hrow .meta div:first-child{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.9rem}
+.hrow .meta div:last-child{color:var(--muted);font-size:.8rem;font-family:var(--f-mono)}
+.hrow .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.eyebadge{font-family:var(--f-disp);font-weight:700;font-size:.8rem;letter-spacing:.06em;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line)}
+.eyebadge.R{color:var(--ink)} .eyebadge.L{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:.76rem;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
 details summary{cursor:pointer;color:var(--muted)}
-textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:.78rem;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
-.cal{height:54px;border:2px solid var(--accent);border-radius:6px;display:grid;place-items:center;color:var(--muted);font-size:.8rem;max-width:100%}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:8px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200;max-width:calc(100% - 32px)}
+
+/* ayarlar */
+.cal{height:56px;border:2px solid var(--accent);border-radius:7px;display:grid;place-items:center;color:var(--muted);font-family:var(--f-mono);font-size:.8rem;max-width:100%;margin-top:10px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200;max-width:calc(100% - 32px)}
+@media (min-width:760px){.toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))}}
 .toast.on{opacity:1}
 
 /* tam ekran test yüzeyi */
-.perim{position:fixed;inset:0;background:var(--perim-bg);z-index:100;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;color:var(--perim-txt)}
+.perim{position:fixed;inset:0;background:var(--perim-bg);z-index:100;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;color:var(--perim-txt);font-family:var(--f-body)}
 .perim.running{cursor:none}
 .perim .fix{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px}
 .perim .fix::before,.perim .fix::after{content:"";position:absolute;background:var(--perim-fix)}
 .perim .fix::before{left:8px;top:0;width:2px;height:18px}
 .perim .fix::after{top:8px;left:0;height:2px;width:18px}
 .perim .dot{position:absolute;border-radius:50%;pointer-events:none}
-.perim .msg{position:absolute;left:50%;top:calc(24px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));text-align:center;font-size:15px;line-height:1.5}
-.perim .msg b{color:#e6e6e6}
-.perim .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#333}
-.perim .prog i{display:block;height:100%;width:0;background:#4f4f4f}
-.perim .pause{position:absolute;inset:0;display:grid;place-content:center;gap:12px;background:rgba(20,20,20,.92);text-align:center;color:#ddd;padding:16px}
-.perim .pause button{background:#3a3a3a;border-color:#555;color:#eee;justify-content:center}
+.perim .msg{position:absolute;left:50%;top:calc(24px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));text-align:center;font-size:15px;line-height:1.55}
+.perim .msg b{color:#eaeaea}
+.perim .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#2e2e2e}
+.perim .prog i{display:block;height:100%;width:0;background:#4a4a4a}
+.perim .pause{position:absolute;inset:0;display:grid;place-content:center;gap:12px;background:rgba(18,18,18,.94);text-align:center;color:#ddd;padding:16px}
+.perim .pause button{background:#3a3a3a;border:1px solid #555;color:#eee;border-radius:8px;padding:10px 16px}
 .perim .pause p{margin:0 0 8px;max-width:40ch}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 
-<header class="top">
-  <h1>Görme Alanı Haritası</h1>
-  <p>Görme alanındaki lekeyi ölç, kaydet ve önceki testlerle karşılaştır. Otomatik test, gözün sabit kalıp kalmadığını kör nokta yoklamasıyla kontrol eder; aynı gün tekrarlanan testlerden “anlamlı değişim” eşiği çıkarır.</p>
-</header>
-
-<div class="wrap">
-  <section class="panel">
-    <div class="tabs" role="tablist">
-      <button role="tab" id="tabA" aria-selected="true" aria-controls="paneA">Otomatik test</button>
-      <button role="tab" id="tabM" aria-selected="false" aria-controls="paneM">Elle işaretleme</button>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--line)" stroke-width="2"/><circle cx="20" cy="20" r="10" fill="none" stroke="var(--line)" stroke-width="1.5"/><path d="M20 14v12M14 20h12" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/><circle cx="31" cy="21.5" r="3" fill="var(--unseen)"/></svg>
+      <div><b>ODAK</b><small>Görme alanı takibi</small></div>
     </div>
-    <div class="bar">
-      <div class="seg" role="group" aria-label="Göz">
-        <button id="eyeR" aria-pressed="true">Sağ göz</button>
-        <button id="eyeL" aria-pressed="false">Sol göz</button>
-      </div>
-      <div class="seg" role="group" aria-label="Fırça" id="toolSeg" hidden>
-        <button id="tU" aria-pressed="true"><i class="sw u"></i>Görmüyorum</button>
-        <button id="tB" aria-pressed="false"><i class="sw b"></i>Bulanık</button>
-        <button id="tE" aria-pressed="false"><i class="sw e"></i>Sil</button>
-      </div>
+    <div class="eyes" role="group" aria-label="Göz">
+      <button id="eyeR" aria-pressed="true">SAĞ GÖZ</button>
+      <button id="eyeL" aria-pressed="false">SOL GÖZ</button>
     </div>
+    <nav class="views" aria-label="Ekranlar">
+      <button data-v="test" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Test</button>
+      <button data-v="res"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><rect x="13" y="13" width="4" height="4" fill="currentColor" stroke="none"/></svg>Sonuçlar</button>
+      <button data-v="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Geçmiş</button>
+      <button data-v="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7v4M11 7v3M15 7v4M19 7v3"/></svg>Ayarlar</button>
+    </nav>
+  </header>
 
-    <div id="paneA" role="tabpanel">
-      <div class="form">
-        <label for="amode">Test</label>
-        <div class="seg" role="group" aria-label="Test türü" id="amode">
-          <button id="amFull" aria-pressed="true">Tam alan</button>
-          <button id="amBS" aria-pressed="false">Kör nokta doğrulama</button>
+  <!-- TEST -->
+  <main class="view" id="v-test">
+    <section class="panel">
+      <p class="eyebrow" id="tEyebrow">Yeni test · sağ göz</p>
+      <h2>Bir gözünü kapat, artıya bak, noktaları yakala.</h2>
+      <p class="lead">Ekranda kısa süre yanıp sönen noktaları gördüğünde dokun. Odak görmediğin bölgeyi haritalar, gözünün sabit kalıp kalmadığını kendisi denetler.</p>
+      <div class="modes" role="group" aria-label="Test türü">
+        <button class="mode" id="mFull" aria-pressed="true">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--muted)" stroke-width="1.5"/><path d="M20 15v10M15 20h10" stroke="var(--accent)" stroke-width="2"/><g fill="var(--muted)"><circle cx="10" cy="12" r="1.6"/><circle cx="28" cy="10" r="1.6"/><circle cx="31" cy="27" r="1.6"/><circle cx="11" cy="29" r="1.6"/><circle cx="20" cy="7" r="1.6"/></g><rect x="22" y="23" width="5" height="5" rx="1" fill="var(--unseen)"/></svg>
+          <b>Tam alan</b><span>Lekeyi bulur ve ölçer. 3–5 dk.</span></button>
+        <button class="mode" id="mBS" aria-pressed="false">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 20v0" stroke="var(--accent)"/><path d="M8 15v10M3 20h10" stroke="var(--accent)" stroke-width="2"/><ellipse cx="28" cy="21" rx="6" ry="8" fill="none" stroke="var(--accent)" stroke-dasharray="2.5 2"/><circle cx="28" cy="21" r="3.2" fill="var(--unseen)"/></svg>
+          <b>Kör nokta doğrulama</b><span>Uygulamanın doğru ölçtüğünü kanıtlar. 4 dk.</span></button>
+        <button class="mode" id="mMan" aria-pressed="false">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="5" width="30" height="30" rx="3" fill="none" stroke="var(--muted)" stroke-width="1.5"/><path d="M5 15h30M5 25h30M15 5v30M25 5v30" stroke="var(--line)"/><rect x="15" y="25" width="10" height="10" fill="var(--unseen)"/><path d="M20 17v6M17 20h6" stroke="var(--accent)" stroke-width="2"/></svg>
+          <b>Elle işaretleme</b><span>Harf ızgarasında kendin boyarsın.</span></button>
+      </div>
+
+      <div id="autoBox">
+        <ol class="steps" id="steps"></ol>
+        <div class="readout" id="cover"></div>
+        <div class="row">
+          <button class="go" id="start"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Testi başlat</button>
+          <span class="note" style="margin:0">Tam ekran açılır · Esc ile duraklat</span>
         </div>
-        <label for="asp" id="aspL">Nokta aralığı</label>
-        <select id="asp"><option value="3">3° · hızlı</option><option value="2">2° · detaylı</option></select>
-        <label for="asize">Uyaran boyutu</label>
-        <select id="asize"><option value="0.43">Goldmann III · 0,43°</option><option value="0.86">Goldmann IV · 0,86°</option></select>
-        <label for="acon">Parlaklık</label>
-        <select id="acon"><option value="hi">Yüksek</option><option value="mid">Orta</option><option value="lo">Düşük</option></select>
+        <details class="cfg" style="margin-top:16px">
+          <summary>Test ayarları</summary>
+          <div class="form">
+            <label for="asp" id="aspL">Nokta aralığı</label>
+            <select id="asp"><option value="3">3° · hızlı</option><option value="2">2° · detaylı</option></select>
+            <label for="asize">Uyaran boyutu</label>
+            <select id="asize"><option value="0.43">Goldmann III · 0,43°</option><option value="0.86">Goldmann IV · 0,86°</option></select>
+            <label for="acon">Parlaklık</label>
+            <select id="acon"><option value="hi">Yüksek</option><option value="mid">Orta</option><option value="lo">Düşük</option></select>
+          </div>
+        </details>
       </div>
-      <p class="cover" id="cover"></p>
-      <ol class="steps" id="steps"></ol>
-      <div class="row"><button class="primary" id="start">Testi başlat</button><span class="note" style="margin:0">Test tam ekran açılır. Duraklatmak için Esc.</span></div>
 
-      <div class="maphead"><b id="amapTitle">Sonuç haritası</b><span id="amapSub"></span></div>
-      <div class="mapwrap" id="amap"></div>
-      <div class="legend" id="amapLegend">
-        <span><i class="sw u"></i>Görülmeyen</span>
-        <span><i class="sw s"></i>Görülen</span>
-        <span><i class="sw g"></i>Kör nokta, test edilmedi</span>
-        <span><i class="lg-ov"></i>Önceki testte görülmeyen</span>
-        <span id="lgRef"><i class="lg-ref"></i>Literatürdeki kör nokta</span>
+      <div id="manBox" hidden>
+        <div class="row">
+          <div class="seg" role="group" aria-label="Fırça">
+            <button class="btn" id="tU" aria-pressed="true"><i class="sw u"></i>Görmüyorum</button>
+            <button class="btn" id="tB" aria-pressed="false"><i class="sw b"></i>Bulanık</button>
+            <button class="btn" id="tE" aria-pressed="false"><i class="sw e"></i>Sil</button>
+          </div>
+          <button class="btn" id="undo">Geri al</button>
+          <button class="btn" id="clear">Temizle</button>
+          <button class="btn" id="shuffle">Harfleri karıştır</button>
+        </div>
+        <div class="gridbox"><div class="grid" id="grid" aria-label="Test ızgarası, 25 x 25"></div></div>
+        <div class="mini" id="manMini"></div>
+        <div class="row" style="margin-top:14px">
+          <input type="text" id="note" placeholder="Not: ışık, yorgunluk, gözlük…" style="flex:1;min-width:180px">
+          <button class="go" id="save" style="padding:10px 18px">Kaydet</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SONUÇLAR -->
+  <main class="view" id="v-res" hidden>
+    <div class="cols">
+      <section class="panel">
+        <div class="reshead"><div><p class="eyebrow" id="rEyebrow" style="margin:0 0 4px"></p><h2 id="rTitle" style="margin:0"></h2></div><div id="rChips" class="row"></div></div>
+        <div class="map" id="map"></div>
+        <div class="legend" id="mapLegend"></div>
+      </section>
+      <div class="view">
+        <section class="panel" id="rStats"></section>
+        <section class="panel">
+          <p class="eyebrow">Karşılaştırma</p>
+          <div class="row" style="margin-bottom:10px"><label for="cmp" class="note" style="margin:0">Önceki test</label><select id="cmp" style="flex:1"></select></div>
+          <div id="cmpOut"></div>
+        </section>
+        <section class="panel">
+          <p class="eyebrow" id="trendTitle">Zaman içinde</p>
+          <div id="trend"></div>
+        </section>
       </div>
     </div>
+  </main>
 
-    <div id="paneM" role="tabpanel" hidden>
-      <p class="note" style="margin:0 0 10px">Bir gözünü kapat, ortadaki yıldıza bak ve gözünü kaydırmadan okunamayan harfleri sürükleyerek işaretle.</p>
-      <div class="gridbox"><div class="grid" id="grid" aria-label="Test ızgarası, 25 x 25"></div></div>
-      <div class="legend">
-        <span><i class="sw u"></i>Görülmeyen</span>
-        <span><i class="sw b"></i>Bulanık / emin değilim</span>
-        <span><i class="lg-ov"></i>Önceki testte işaretli</span>
-        <span><i class="lg-fx"></i>Önceki testte vardı, şimdi yok</span>
-      </div>
-      <div class="bar" style="margin-top:12px;margin-bottom:0">
-        <button id="undo">Geri al</button>
-        <button id="clear">Temizle</button>
-        <button id="shuffle">Harfleri karıştır</button>
-        <label class="inl"><input type="checkbox" id="showPrev" checked> Önceki testi üstüne çiz</label>
-      </div>
-      <div class="bar" style="margin-top:12px;margin-bottom:0">
-        <input type="text" id="note" placeholder="Not (opsiyonel): ışık, yorgunluk, gözlük…" style="flex:1;min-width:180px">
-        <button class="primary" id="save">Testi kaydet</button>
-      </div>
-    </div>
-  </section>
-
-  <div class="stack">
+  <!-- GEÇMİŞ -->
+  <main class="view" id="v-hist" hidden>
     <section class="panel">
-      <h2 id="statsTitle">Bu test</h2>
-      <div id="statsBody"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Karşılaştırma</h2>
-      <div class="row" style="margin-bottom:10px">
-        <label class="inl" for="cmp">Önceki test</label>
-        <select id="cmp" style="flex:1;min-width:0"></select>
-      </div>
-      <div id="cmpOut"></div>
-    </section>
-
-    <section class="panel">
-      <h2 id="trendTitle">Zaman içinde</h2>
-      <div id="trend"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Kayıtlı testler</h2>
+      <p class="eyebrow">Kayıtlı testler</p>
       <div class="hist" id="hist"></div>
-      <details style="margin-top:12px">
-        <summary>Yedekle / geri yükle</summary>
-        <p class="note">Kayıtlar yalnızca bu tarayıcıda tutulur. Aşağıdaki metni kopyalayıp sakla; başka cihazda yapıştırıp “İçe aktar” de.</p>
-        <textarea id="io" spellcheck="false"></textarea>
-        <div class="row" style="margin-top:8px"><button class="small" id="exp">Kopyala</button><button class="small" id="imp">İçe aktar</button></div>
+      <details style="margin-top:16px">
+        <summary>Yedekle / başka cihaza taşı</summary>
+        <p class="note">Kayıtlar yalnızca bu cihazın tarayıcısında durur. “Kopyala” ile metni al, diğer cihazda yapıştırıp “İçe aktar”a bas.</p>
+        <textarea id="io" spellcheck="false" aria-label="Yedek metni"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="exp">Kopyala</button><button class="btn sm" id="imp">İçe aktar</button></div>
       </details>
     </section>
+  </main>
 
-    <section class="panel">
-      <h2>Ölçek ayarı</h2>
-      <div class="row">
-        <label class="inl" for="dist">Göz–ekran mesafesi</label>
-        <input type="number" id="dist" min="15" max="150" step="1" value="40"> <span class="note" style="margin:0">cm</span>
-      </div>
-      <p class="note">Bir banka kartını (85,6 mm) ekrana dayayıp kutunun genişliğini kartla eşitle. Tüm derece hesapları buna göre yapılır; her cihazda bir kez ayarla.</p>
-      <input type="range" id="ppm" min="2.5" max="9" step="0.01" value="3.78" style="width:100%" aria-label="Ekran ölçeği">
-      <div class="cal" id="calbox">85,6 mm</div>
-      <p class="note" id="scaleInfo"></p>
-    </section>
-    <p class="note">Bu bir ev takibi aracıdır, tanı koymaz. Haritada ani büyüme, yeni bir leke veya düz çizgilerde eğrilik fark edersen göz doktoruna başvur.</p>
-  </div>
+  <!-- AYARLAR -->
+  <main class="view" id="v-set" hidden>
+    <div class="cols">
+      <section class="panel">
+        <p class="eyebrow">Ekran kalibrasyonu</p>
+        <h2>Kartı ekrana daya, kutuyu eşitle.</h2>
+        <p class="lead">Banka kartı her yerde 85,6 mm genişliğindedir. Kaydırıcıyı, kutu kartla tam aynı genişliğe gelene kadar oynat. Her cihazda bir kez yapılır.</p>
+        <input type="range" id="ppm" min="2.5" max="9" step="0.01" value="3.78" style="margin-top:16px" aria-label="Ekran ölçeği">
+        <div class="cal" id="calbox">85,6 mm</div>
+        <p class="note" id="scaleInfo"></p>
+      </section>
+      <section class="panel">
+        <p class="eyebrow">Mesafe</p>
+        <div class="row"><label for="dist" class="note" style="margin:0">Göz–ekran mesafesi</label><input type="number" id="dist" min="15" max="150" step="1" value="40"><span class="note" style="margin:0">cm</span></div>
+        <p class="note">Test boyunca mesafeyi sabit tut. Ekranın kenarına bağlı bir ip ya da cetvel işini kolaylaştırır.</p>
+        <h3>Hakkında</h3>
+        <p class="note">Odak bir ev takibi ve Ar-Ge aracıdır, tanı koymaz. Haritada ani büyüme, yeni bir leke ya da düz çizgilerde eğrilik fark edersen göz doktoruna başvur.</p>
+        <p class="note">Yöntem: eşik üstü statik perimetri, Heijl-Krakau sabitleme kontrolü, yanlış pozitif yoklaması, tekrarlanabilirlik katsayısı (2,77 × SD).</p>
+      </section>
+    </div>
+  </main>
 </div>
 
 <div class="perim" id="ov" hidden>
@@ -280,9 +339,8 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:.78rem;b
 
 <script>
 (()=>{
-/* ---------- sabitler ve yardımcılar ---------- */
-const N=25, C=12, CI=C*N+C, TOTAL=N*N-1;
-const KEY='gorme-alani-v1';
+/* ---------- sabitler ---------- */
+const N=25,C=12,CI=C*N+C,TOTAL=N*N-1,KEY='gorme-alani-v1';
 const $=id=>document.getElementById(id);
 const fmt=(x,d=1)=>(Number.isFinite(x)?x:0).toLocaleString('tr-TR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -295,389 +353,297 @@ const frame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const mean=a=>a.reduce((s,v)=>s+v,0)/(a.length||1);
 const sd=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1))};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-// Fizyolojik kör nokta, temporal derece (x>0 = temporal), y>0 = yukarı. Literatür ortalaması.
-const BS_REF={x:15.5,y:-1.5,w:5.5,h:7.5}; BS_REF.area=Math.PI/4*BS_REF.w*BS_REF.h;
-const CON={hi:'#f2f2f2',mid:'#9c9c9c',lo:'#5e5e5e'};
-const CON_TR={hi:'yüksek',mid:'orta',lo:'düşük'};
+const BS_REF={x:15.5,y:-1.5,w:5.5,h:7.5};BS_REF.area=Math.PI/4*BS_REF.w*BS_REF.h;
+const CON={hi:'#f2f2f2',mid:'#9c9c9c',lo:'#5e5e5e'},CON_TR={hi:'yüksek',mid:'orta',lo:'düşük'};
+const EYE_TR={R:'sağ göz',L:'sol göz'};
+const TYPE_TR=h=>h.type==='manual'?'Elle':h.mode==='bs'?'Kör nokta':'Tam alan '+h.sp+'°';
 
 /* ---------- durum ---------- */
-let S={eye:'R',tool:2,dist:40,ppm:3.78,mask:new Array(N*N).fill(0),hist:[],cmp:null,showPrev:true,
-  tab:'auto',amode:'full',asp:3,asize:0.43,acon:'mid',selAuto:null,cmpAuto:null};
-try{const raw=localStorage.getItem(KEY);if(raw){Object.assign(S,JSON.parse(raw))}}catch(e){}
+let S={eye:'R',tool:2,dist:40,ppm:3.78,mask:new Array(N*N).fill(0),hist:[],view:'test',tmode:'full',asp:3,asize:0.43,acon:'mid',sel:null,cmpSel:null};
+try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);Object.assign(S,o);if(o.amode&&!o.tmode)S.tmode=o.tab==='manual'?'manual':o.amode;if(o.selAuto&&!o.sel)S.sel=o.selAuto}}catch(e){}
 S.hist.forEach(h=>{if(!h.type)h.type='manual'});
+if(!['test','res','hist','set'].includes(S.view))S.view='test';
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 
 /* ---------- örnek kayıtlar ---------- */
 function exMask(cells){const m=new Array(N*N).fill(0);cells.forEach(([r,c,v])=>m[r*N+c]=v);return m.join('')}
-if(!S._seeded){
-  const a=[],b=[];
+function inBS(tx,y,ref,margin=1){return ((tx-ref.x)/(ref.w/2+margin))**2+((y-ref.y)/(ref.h/2+margin))**2<=1}
+function exAuto(id,date,cx,cy,rx,ry,fl,fp){const sp=3,pts=[];
+  for(let i=-8;i<8;i++)for(let j=-5;j<5;j++){const tx=(i+.5)*sp,y=(j+.5)*sp;
+    if(inBS(tx,y,BS_REF))pts.push([tx,y,-1]);else pts.push([tx,y,(((tx-cx)/rx)**2+((y-cy)/ry)**2<=1)?0:1]);}
+  return {id,type:'auto',mode:'full',date,eye:'R',sp,size:.43,con:'mid',points:pts,fl:[fl,14],fp:[fp,14],spur:1,dist:40,dur:262,bsRef:{...BS_REF,src:'literatür'},note:'Örnek kayıt',ex:true}}
+if(!S._seeded){const a=[],b=[];
   for(let r=16;r<=19;r++)for(let c=9;c<=11;c++)a.push([r,c,(r==16||c==9)?1:2]);
   for(let r=15;r<=20;r++)for(let c=8;c<=12;c++){if(r==15&&c==12)continue;b.push([r,c,(r==15||r==20||c==8||c==12)?1:2])}
-  S.hist.push(
-    {id:'ex1',type:'manual',date:'2026-09-21T10:00:00',eye:'R',mask:exMask(a),cellDeg:1.27,note:'Örnek kayıt',ex:true},
-    {id:'ex2',type:'manual',date:'2026-10-14T10:00:00',eye:'R',mask:exMask(b),cellDeg:1.27,note:'Örnek kayıt',ex:true});
-  S._seeded=true;
-}
-function exAuto(id,date,cx,cy,rx,ry,fl,fp){
-  const sp=3,pts=[];
-  for(let i=-8;i<8;i++)for(let j=-5;j<5;j++){const tx=(i+.5)*sp,y=(j+.5)*sp;
-    if(inBS(tx,y,BS_REF))pts.push([tx,y,-1]);
-    else pts.push([tx,y,(((tx-cx)/rx)**2+((y-cy)/ry)**2<=1)?0:1]);}
-  return {id,type:'auto',mode:'full',date,eye:'R',sp,size:.43,con:'mid',points:pts,fl:[fl,14],fp:[fp,14],spur:1,dist:40,dur:262,bsRef:{...BS_REF},note:'Örnek kayıt',ex:true};
-}
-if(!S._seededAuto){
-  S.hist.push(exAuto('ex3','2026-10-14T10:20:00',-3,-6.5,4.6,4.2,1,0), exAuto('ex4','2026-10-28T10:20:00',-3,-6.5,5.6,4.9,2,1));
-  S.selAuto=S.selAuto||'ex4'; S._seededAuto=true;
-}
+  S.hist.push({id:'ex1',type:'manual',date:'2026-09-21T10:00:00',eye:'R',mask:exMask(a),cellDeg:1.27,note:'Örnek kayıt',ex:true},
+    {id:'ex2',type:'manual',date:'2026-10-14T10:00:00',eye:'R',mask:exMask(b),cellDeg:1.27,note:'Örnek kayıt',ex:true});S._seeded=true}
+if(!S._seededAuto){S.hist.push(exAuto('ex3','2026-10-14T10:20:00',-3,-6.5,4.6,4.2,1,0),exAuto('ex4','2026-10-28T10:20:00',-3,-6.5,5.6,4.9,2,1));S._seededAuto=true}
+if(!S.sel)S.sel='ex4';
 
 /* ---------- geometri ---------- */
 const deg2px=d=>Math.tan(d*Math.PI/180)*S.dist*10*S.ppm;
 const px2deg=p=>Math.atan(p/S.ppm/(S.dist*10))*180/Math.PI;
-function inBS(tx,y,ref,margin=1){return ((tx-ref.x)/(ref.w/2+margin))**2+((y-ref.y)/(ref.h/2+margin))**2<=1}
-// Kullanıcının kendi ölçtüğü kör nokta (güvenilir doğrulama testlerinin ortalaması), yoksa literatür.
 function userBS(eye){
   const v=S.hist.filter(h=>h.type==='auto'&&h.mode==='bs'&&h.eye===eye&&!h.ex).map(autoStats).filter(s=>s.bs&&s.reliable);
   if(!v.length)return {...BS_REF,src:'literatür'};
-  return {x:mean(v.map(s=>s.bs.x)),y:mean(v.map(s=>s.bs.y)),w:mean(v.map(s=>s.bs.w)),h:mean(v.map(s=>s.bs.h)),src:`senin ${v.length} ölçümün`};
+  return {x:mean(v.map(s=>s.bs.x)),y:mean(v.map(s=>s.bs.y)),w:mean(v.map(s=>s.bs.w)),h:mean(v.map(s=>s.bs.h)),src:`kendi ${v.length} ölçümün`};
 }
 function layout(mode,eye,vw,vh){
-  const m=14, sign=eye==='R'?1:-1, pts=[];
-  let fx=vw/2, fy=vh/2, sp, want=0;
-  if(mode==='full'){
-    sp=S.asp;
-    for(let i=-15;i<15;i++)for(let j=-15;j<15;j++){
-      const tx=(i+.5)*sp,y=(j+.5)*sp; if(Math.abs(tx)>30||Math.abs(y)>24)continue;
-      const px=fx+sign*deg2px(tx),py=fy-deg2px(y);
-      if(px>=m&&px<=vw-m&&py>=m+40&&py<=vh-m)pts.push({tx,y,px,py});
-    }
-  }else{
-    sp=1; fx=sign>0?Math.max(40,vw*.06):vw-Math.max(40,vw*.06);
-    for(let tx=10;tx<=21;tx++)for(let y=-8;y<=5;y++){want++;
-      const px=fx+sign*deg2px(tx),py=fy-deg2px(y);
-      if(px>=m&&px<=vw-m&&py>=m+40&&py<=vh-m)pts.push({tx,y,px,py});}
-  }
-  const ext={x0:px2deg(Math.min(fx,vw-fx)-m),xT:px2deg((sign>0?vw-fx:fx)-m),xN:px2deg((sign>0?fx:vw-fx)-m),y:px2deg(vh/2-m-40)};
-  return {fx,fy,sp,pts,want,ext,sign};
+  const m=14,sign=eye==='R'?1:-1,pts=[];let fx=vw/2,fy=vh/2,sp,want=0;
+  if(mode==='full'){sp=S.asp;
+    for(let i=-15;i<15;i++)for(let j=-15;j<15;j++){const tx=(i+.5)*sp,y=(j+.5)*sp;if(Math.abs(tx)>30||Math.abs(y)>24)continue;
+      const px=fx+sign*deg2px(tx),py=fy-deg2px(y);if(px>=m&&px<=vw-m&&py>=m+40&&py<=vh-m)pts.push({tx,y,px,py});}
+  }else{sp=1;fx=sign>0?Math.max(40,vw*.06):vw-Math.max(40,vw*.06);
+    for(let tx=10;tx<=21;tx++)for(let y=-8;y<=5;y++){want++;const px=fx+sign*deg2px(tx),py=fy-deg2px(y);
+      if(px>=m&&px<=vw-m&&py>=m+40&&py<=vh-m)pts.push({tx,y,px,py});}}
+  return {fx,fy,sp,pts,want,sign,ext:{x0:px2deg(Math.min(fx,vw-fx)-m),y:px2deg(vh/2-m-40)}};
 }
 
 /* ---------- istatistik ---------- */
+const decode=s=>s.split('').map(Number);
+const byId=id=>S.hist.find(h=>h.id===id)||null;
 function manualStats(mask,cd,eye){
   let u=0,b=0,sx=0,sy=0,w=0,maxE=0;const q={UT:[0,0],UN:[0,0],AT:[0,0],AN:[0,0]};
   for(let i=0;i<N*N;i++){const v=mask[i];if(!v||i===CI)continue;
-    const r=Math.floor(i/N),c=i%N,dx=c-C,dy=C-r,tx=eye==='R'?dx:-dx;
-    if(v===2)u++;else b++;
-    const ww=v===2?1:.5;sx+=tx*ww;sy+=dy*ww;w+=ww;maxE=Math.max(maxE,Math.hypot(dx,dy));
-    q[(dy>0?'U':'A')+(tx>0?'T':'N')][v===2?0:1]++;}
-  return {u,b,pu:u/TOTAL*100,pb:b/TOTAL*100,area:u*cd*cd,cx:w?sx/w*cd:0,cy:w?sy/w*cd:0,maxE:maxE*cd,q,cd};
+    const r=Math.floor(i/N),c=i%N,dx=c-C,dy=C-r,tx=eye==='R'?dx:-dx;if(v===2)u++;else b++;
+    const ww=v===2?1:.5;sx+=tx*ww;sy+=dy*ww;w+=ww;maxE=Math.max(maxE,Math.hypot(dx,dy));q[(dy>0?'U':'A')+(tx>0?'T':'N')][v===2?0:1]++;}
+  return {u,b,tot:TOTAL,pu:u/TOTAL*100,pb:b/TOTAL*100,area:u*cd*cd,cx:w?sx/w*cd:0,cy:w?sy/w*cd:0,maxE:maxE*cd,q,cd,sp:cd};
 }
 function autoStats(rec){
-  const sp=rec.sp,pts=rec.points;let tot=0,u=0,sx=0,sy=0,maxE=0;const q={UT:[0,0],UN:[0,0],AT:[0,0],AN:[0,0]};
-  const un=[];
-  for(const [tx,y,s] of pts){if(s<0)continue;tot++;if(s===0){u++;un.push([tx,y]);sx+=tx;sy+=y;maxE=Math.max(maxE,Math.hypot(tx,y));q[(y>0?'U':'A')+(tx>0?'T':'N')][0]++}}
-  const flr=rec.fl&&rec.fl[1]?rec.fl[0]/rec.fl[1]:null, fpr=rec.fp&&rec.fp[1]?rec.fp[0]/rec.fp[1]:0;
-  const reliable=(flr===null||flr<=.2)&&fpr<=.15;
-  const r={tot,u,pu:tot?u/tot*100:0,area:u*sp*sp,cx:u?sx/u:0,cy:u?sy/u:0,maxE,q,flr,fpr,reliable};
-  if(rec.mode==='bs'){
-    if(u){const xs=un.map(p=>p[0]),ys=un.map(p=>p[1]);
-      r.bs={x:mean(xs),y:mean(ys),w:Math.max(...xs)-Math.min(...xs)+sp,h:Math.max(...ys)-Math.min(...ys)+sp,area:u*sp*sp};}
-    else r.bs=null;
-  }
+  const sp=rec.sp;let tot=0,u=0,sx=0,sy=0,maxE=0;const q={UT:[0,0],UN:[0,0],AT:[0,0],AN:[0,0]},un=[];
+  for(const [tx,y,s] of rec.points){if(s<0)continue;tot++;if(s===0){u++;un.push([tx,y]);sx+=tx;sy+=y;maxE=Math.max(maxE,Math.hypot(tx,y));q[(y>0?'U':'A')+(tx>0?'T':'N')][0]++}}
+  const flr=rec.fl&&rec.fl[1]?rec.fl[0]/rec.fl[1]:null,fpr=rec.fp&&rec.fp[1]?rec.fp[0]/rec.fp[1]:0;
+  const r={tot,u,pu:tot?u/tot*100:0,area:u*sp*sp,cx:u?sx/u:0,cy:u?sy/u:0,maxE,q,flr,fpr,reliable:(flr===null||flr<=.2)&&fpr<=.15,sp};
+  if(rec.mode==='bs'){if(u){const xs=un.map(p=>p[0]),ys=un.map(p=>p[1]);
+    r.bs={x:mean(xs),y:mean(ys),w:Math.max(...xs)-Math.min(...xs)+sp,h:Math.max(...ys)-Math.min(...ys)+sp,area:u*sp*sp}}else r.bs=null}
   return r;
 }
-// Tekrarlanabilirlik: aynı gün yapılmış ≥3 test → 2,77 × SD (Bland-Altman tekrarlanabilirlik katsayısı)
+const statsOf=h=>h.type==='manual'?manualStats(decode(h.mask),h.cellDeg,h.eye):autoStats(h);
 function repeatability(eye,mode,sp,metric){
   const recs=S.hist.filter(h=>h.type==='auto'&&h.eye===eye&&h.mode===mode&&(mode==='bs'||h.sp===sp));
   const days={};recs.forEach(h=>{const s=autoStats(h);if(!s.reliable)return;(days[dayKey(h.date)]??=[]).push({h,s})});
-  const groups=Object.values(days).filter(g=>g.length>=3).sort((a,b)=>b[0].h.date.localeCompare(a[0].h.date));
-  if(!groups.length)return null;
-  const g=groups[0],vals=g.map(x=>metric(x.s)).filter(Number.isFinite);
+  const g=Object.values(days).filter(g=>g.length>=3).sort((a,b)=>b[0].h.date.localeCompare(a[0].h.date))[0];
+  if(!g)return null;const vals=g.map(x=>metric(x.s)).filter(Number.isFinite);
   return {cor:2.77*sd(vals),sd:sd(vals),n:vals.length,day:g[0].h.date,mean:mean(vals)};
+}
+const QN={UT:'Üst temporal',UN:'Üst nazal',AT:'Alt temporal',AN:'Alt nazal'};
+function dirText(x,y){if(Math.hypot(x,y)<.3)return 'merkezde';const v=y>.3?'yukarı':y<-.3?'aşağı':'';const h=Math.abs(x)>.3?(x>0?'temporal':'nazal'):'';return [v,h].filter(Boolean).join('-')+' yönde'}
+const dlt=(x,y,d=1)=>{const v=y-x;const cls=v>1e-4?'up':v<-1e-4?'dn':'';return `<span class="${cls}">${v>0?'+':''}${fmt(v,d)}</span>`};
+
+/* ---------- harita (halkalı perimetri grafiği) ---------- */
+function mapPoints(h){
+  if(h.type!=='manual')return {sp:h.sp,pts:h.points,box:null};
+  const cd=h.cellDeg,m=decode(h.mask),pts=[];
+  for(let i=0;i<N*N;i++){if(!m[i]||i===CI)continue;const r=Math.floor(i/N),c=i%N,dx=c-C;pts.push([(h.eye==='R'?dx:-dx)*cd,(C-r)*cd,m[i]===2?0:2])}
+  return {sp:cd,pts,box:(C+.5)*cd};
+}
+function mapSVG(h,prev){
+  const sign=h.eye==='R'?1:-1,{sp,pts,box}=mapPoints(h);
+  let x0,x1,y0,y1;
+  if(box){x0=-box-1;x1=box+1;y0=-box-1;y1=box+1}
+  else{const xs=pts.map(p=>sign*p[0]),ys=pts.map(p=>p[1]);x0=Math.min(0,...xs)-sp;x1=Math.max(0,...xs)+sp;y0=Math.min(0,...ys)-sp;y1=Math.max(0,...ys)+sp;
+    if(h.mode==='bs'){x0=Math.min(x0,sign*BS_REF.x-BS_REF.w);x1=Math.max(x1,sign*BS_REF.x+BS_REF.w)}}
+  const W=x1-x0,H=y1-y0,fs=Math.max(W,H*1.4)/44,lw=fs*.07;
+  let g=`<defs><clipPath id="clipM"><rect x="${x0}" y="${-y1}" width="${W}" height="${H}"/></clipPath></defs><g clip-path="url(#clipM)">`;
+  const R=Math.hypot(Math.max(-x0,x1),Math.max(-y0,y1));
+  for(let r=10;r<=R+10;r+=10)g+=`<circle cx="0" cy="0" r="${r}" fill="none" stroke="var(--line)" stroke-width="${lw}"/>`;
+  for(let a=0;a<180;a+=45){const t=a*Math.PI/180,L=R+10;g+=`<line x1="${-L*Math.cos(t)}" y1="${L*Math.sin(t)}" x2="${L*Math.cos(t)}" y2="${-L*Math.sin(t)}" stroke="var(--line)" stroke-width="${a%90?lw*.6:lw*1.4}" ${a%90?`stroke-dasharray="${fs*.2} ${fs*.35}"`:''}/>`}
+  g+='</g>';
+  for(let r=10;r<=R;r+=10)if(r<x1)g+=`<text x="${r+fs*.2}" y="${-fs*.3}" font-size="${fs*.75}" fill="var(--muted)" font-family="var(--f-mono)">${r}°</text>`;
+  if(box)g+=`<rect x="${-box}" y="${-box}" width="${2*box}" height="${2*box}" fill="none" stroke="var(--muted)" stroke-width="${lw}" stroke-dasharray="${fs*.3} ${fs*.25}"/>`;
+  const gap=sp*.07;
+  for(const [tx,y,s] of pts){const X=sign*tx;
+    if(s===1)g+=`<circle cx="${X}" cy="${-y}" r="${Math.min(sp*.12,fs*.2)}" fill="var(--muted)" opacity=".75"/>`;
+    else g+=`<rect x="${X-sp/2+gap}" y="${-y-sp/2+gap}" width="${sp-2*gap}" height="${sp-2*gap}" rx="${sp*.1}" fill="${s===0?'var(--unseen)':s===2?'var(--blur)':'var(--line)'}"/>`}
+  if(prev){const pp=mapPoints(prev),ps=prev.eye==='R'?1:-1;
+    if(Math.abs(pp.sp-sp)<1e-6)for(const [tx,y,s] of pp.pts)if(s===0){const X=ps*tx;g+=`<rect x="${X-sp/2+gap*2.2}" y="${-y-sp/2+gap*2.2}" width="${sp-4.4*gap}" height="${sp-4.4*gap}" rx="${sp*.07}" fill="none" stroke="var(--prev)" stroke-width="${sp*.07}"/>`}}
+  if(h.mode==='bs')g+=`<ellipse cx="${sign*BS_REF.x}" cy="${-BS_REF.y}" rx="${BS_REF.w/2}" ry="${BS_REF.h/2}" fill="none" stroke="var(--accent)" stroke-width="${lw*1.8}" stroke-dasharray="${fs*.4} ${fs*.3}"/>`;
+  const c=fs*.7;g+=`<path d="M${-c} 0H${c}M0 ${-c}V${c}" stroke="var(--accent)" stroke-width="${lw*3}" stroke-linecap="round"/>`;
+  g+=`<text x="${x0+fs*.4}" y="${-y1+fs*1.1}" font-size="${fs*.8}" fill="var(--muted)" font-family="var(--f-mono)" letter-spacing=".08em">${sign>0?'NAZAL':'TEMPORAL'}</text><text x="${x1-fs*.4}" y="${-y1+fs*1.1}" text-anchor="end" font-size="${fs*.8}" fill="var(--muted)" font-family="var(--f-mono)" letter-spacing=".08em">${sign>0?'TEMPORAL':'NAZAL'}</text>`;
+  return `<svg viewBox="${x0} ${-y1} ${W} ${H}" role="img" aria-label="Görme alanı haritası">${g}</svg>`;
 }
 
 /* ---------- manuel ızgara ---------- */
-const grid=$('grid');const cells=[];
+const grid=$('grid'),cells=[];
 function letters(){for(let i=0;i<N*N;i++){if(i===CI)continue;cells[i].textContent=LET[Math.floor(Math.random()*LET.length)]}}
-for(let r=0;r<N;r++)for(let c=0;c<N;c++){
-  const d=document.createElement('div');const i=r*N+c;d.className='c'+(((r+c)&1)?' alt':'');d.dataset.i=i;
-  if(i===CI){d.classList.add('ctr');d.innerHTML='<span aria-label="Sabitleme noktası">★</span>'}
-  grid.appendChild(d);cells.push(d);
-}
+for(let r=0;r<N;r++)for(let c=0;c<N;c++){const d=document.createElement('div'),i=r*N+c;d.className='c'+(((r+c)&1)?' alt':'');d.dataset.i=i;
+  if(i===CI){d.classList.add('ctr');d.innerHTML='<span aria-label="Sabitleme noktası">✚</span>'}grid.appendChild(d);cells.push(d)}
 letters();
 let lastCd=1.27;
-const cellDeg=()=>{const w=grid.getBoundingClientRect().width;if(w>0){lastCd=2*Math.atan(w/N/S.ppm/2/(S.dist*10))*180/Math.PI}return lastCd};
-const decode=s=>s.split('').map(Number);
-const byId=id=>S.hist.find(h=>h.id===id)||null;
+const cellDeg=()=>{const w=grid.getBoundingClientRect().width;if(w>0)lastCd=2*Math.atan(w/N/S.ppm/2/(S.dist*10))*180/Math.PI;return lastCd};
+function paintGrid(){for(let i=0;i<N*N;i++){if(i===CI)continue;const v=S.mask[i];cells[i].classList.toggle('v2',v===2);cells[i].classList.toggle('v1',v===1)}}
+function renderManMini(){const s=manualStats(S.mask,cellDeg(),S.eye);
+  $('manMini').innerHTML=`<span>Görülmeyen <b>${s.u}</b> hücre · <b>${fmt(s.pu)}%</b></span><span>Bulanık <b>${s.b}</b></span><span>Alan <b>${fmt(s.area)}°²</b></span><span>1 hücre ≈ ${fmt(s.cd,2)}°</span>`}
 
-function paintGrid(){
-  const p=byId(S.cmp);const pm=(p&&p.type==='manual'&&S.showPrev)?decode(p.mask):null;
-  for(let i=0;i<N*N;i++){if(i===CI)continue;const v=S.mask[i],el=cells[i];
-    el.classList.toggle('v2',v===2);el.classList.toggle('v1',v===1);
-    const pv=pm?pm[i]:0;el.classList.toggle('ov',pv>0&&v>0);el.classList.toggle('fx',pv>0&&v===0);}
-}
-const QN={UT:'Üst temporal',UN:'Üst nazal',AT:'Alt temporal',AN:'Alt nazal'};
-function dirText(x,y){if(Math.hypot(x,y)<.3)return 'merkezde';
-  const v=y>0.3?'yukarı':y<-0.3?'aşağı':'';const h=Math.abs(x)>0.3?(x>0?'temporal':'nazal'):'';
-  return [v,h].filter(Boolean).join('-')+' yönde';}
-const dlt=(x,y,d=1)=>{const v=y-x;const cls=v>1e-4?'delta-up':v<-1e-4?'delta-dn':'';return `<span class="${cls}">${v>0?'+':''}${fmt(v,d)}</span>`};
-
-/* ---------- render: manuel ---------- */
-function renderManual(){
-  const cd=cellDeg();const s=manualStats(S.mask,cd,S.eye);
-  $('statsTitle').textContent='Bu test · elle işaretleme';
-  $('statsBody').innerHTML=`<div class="kpis">
-    <div class="k u"><b>${s.u}</b><small>görülmeyen hücre · ${fmt(s.pu)}%</small></div>
-    <div class="k b"><b>${s.b}</b><small>bulanık hücre · ${fmt(s.pb)}%</small></div>
-    <div class="k"><b>${fmt(s.area)}</b><small>alan, derece² (görülmeyen)</small></div></div>
-    <div class="tscroll"><table style="margin-top:14px"><thead><tr><th>Kadran</th><th class="n">Görülmeyen</th><th class="n">Bulanık</th><th class="n">Alan °²</th></tr></thead>
-    <tbody>${Object.keys(QN).map(k=>`<tr><td>${QN[k]}</td><td class="n">${s.q[k][0]}</td><td class="n">${s.q[k][1]}</td><td class="n">${fmt(s.q[k][0]*cd*cd)}</td></tr>`).join('')}</tbody></table></div>
-    <p class="note">${(s.u+s.b)?`Ağırlık merkezi sabitleme noktasının ${fmt(Math.hypot(s.cx,s.cy))}° ${dirText(s.cx,s.cy)}. En uzak işaretli hücre ${fmt(s.maxE)}°. Bir hücre ≈ ${fmt(cd,2)}°.`:`İşaretli hücre yok. Bir hücre ≈ ${fmt(cd,2)}°.`}</p>`;
-  // karşılaştırma
-  const same=S.hist.filter(h=>h.type==='manual'&&h.eye===S.eye).sort((a,b)=>b.date.localeCompare(a.date));
-  if(!same.find(h=>h.id===S.cmp))S.cmp=same[0]?.id||null;
-  fillCmp(same,S.cmp);
-  const p=byId(S.cmp);
-  if(!p){$('cmpOut').innerHTML='<p class="note">Bu göz için kayıtlı elle işaretleme olunca burada fark görünür.</p>';return}
-  const pm=decode(p.mask);const ps=manualStats(pm,cd,p.eye);
-  let add=0,gone=0,both=0;for(let i=0;i<N*N;i++){const a=pm[i]>0,b=S.mask[i]>0;if(a&&b)both++;else if(b)add++;else if(a)gone++;}
-  const days=Math.round((Date.now()-new Date(p.date))/864e5);
-  $('cmpOut').innerHTML=`<div class="tscroll"><table><thead><tr><th></th><th class="n">Önceki</th><th class="n">Şimdi</th><th class="n">Fark</th></tr></thead><tbody>
-   <tr><td>Görülmeyen %</td><td class="n">${fmt(ps.pu)}</td><td class="n">${fmt(s.pu)}</td><td class="n">${dlt(ps.pu,s.pu)}</td></tr>
-   <tr><td>Bulanık %</td><td class="n">${fmt(ps.pb)}</td><td class="n">${fmt(s.pb)}</td><td class="n">${dlt(ps.pb,s.pb)}</td></tr>
-   <tr><td>Alan °²</td><td class="n">${fmt(ps.area)}</td><td class="n">${fmt(s.area)}</td><td class="n">${dlt(ps.area,s.area)}</td></tr>
-  </tbody></table></div>
-  <p class="note">${days} gün önceki teste göre: <b class="delta-up">${add}</b> yeni hücre, <b class="delta-dn">${gone}</b> hücre artık işaretsiz, ${both} hücre iki testte de işaretli. Elle işaretlemede anlamlılık hesaplanmaz; bunun için otomatik testi kullan.</p>`;
-}
-function fillCmp(list,sel){
-  const el=$('cmp');
-  el.innerHTML=list.length?list.map(h=>`<option value="${h.id}"${h.id===sel?' selected':''}>${dtstr(h.date)}${h.ex?' (örnek)':''}</option>`).join(''):'<option>Bu göz için kayıt yok</option>';
-  el.disabled=!list.length;
-}
-
-/* ---------- render: otomatik ---------- */
-function autoMap(rec,prev){
-  const sign=rec.eye==='R'?1:-1,sp=rec.sp,P=rec.points;
-  const xs=P.map(p=>sign*p[0]),ys=P.map(p=>p[1]);
-  let x0=Math.min(0,...xs)-sp,x1=Math.max(0,...xs)+sp,y0=Math.min(0,...ys)-sp,y1=Math.max(0,...ys)+sp;
-  if(rec.mode==='bs'){const r=BS_REF;x0=Math.min(x0,sign*r.x-r.w);x1=Math.max(x1,sign*r.x+r.w);}
-  const W=x1-x0,H=y1-y0,fs=Math.max(W,H*1.4)/42,lw=fs*.08;
-  let g='';
-  for(let v=Math.ceil(x0/10)*10;v<=x1;v+=10)g+=`<line x1="${v}" x2="${v}" y1="${-y1}" y2="${-y0}" stroke="var(--line)" stroke-width="${v===0?lw*1.6:lw}"/>`;
-  for(let v=Math.ceil(y0/10)*10;v<=y1;v+=10)g+=`<line y1="${-v}" y2="${-v}" x1="${x0}" x2="${x1}" stroke="var(--line)" stroke-width="${v===0?lw*1.6:lw}"/>`;
-  for(let v=Math.ceil(x0/10)*10;v<=x1;v+=10)if(v)g+=`<text x="${v+fs*.25}" y="${-y0-fs*.35}" font-size="${fs*.8}" fill="var(--muted)" font-family="var(--f-mono)">${Math.abs(v)}°</text>`;
-  const gap=sp*.08;
-  for(const [tx,y,s] of P){const X=sign*tx;
-    if(s===0)g+=`<rect x="${X-sp/2+gap}" y="${-y-sp/2+gap}" width="${sp-2*gap}" height="${sp-2*gap}" rx="${sp*.08}" fill="var(--unseen)"/>`;
-    else if(s<0)g+=`<rect x="${X-sp/2+gap}" y="${-y-sp/2+gap}" width="${sp-2*gap}" height="${sp-2*gap}" rx="${sp*.08}" fill="var(--line)"/>`;
-    else g+=`<circle cx="${X}" cy="${-y}" r="${Math.min(sp*.13,fs*.22)}" fill="var(--muted)"/>`;}
-  if(prev&&prev.sp===sp&&prev.mode===rec.mode){const ps=prev.eye==='R'?1:-1;
-    for(const [tx,y,s] of prev.points)if(s===0){const X=ps*tx;g+=`<rect x="${X-sp/2+gap*2}" y="${-y-sp/2+gap*2}" width="${sp-4*gap}" height="${sp-4*gap}" rx="${sp*.06}" fill="none" stroke="var(--prev)" stroke-width="${sp*.07}"/>`}}
-  if(rec.mode==='bs'){const r=BS_REF;g+=`<ellipse cx="${sign*r.x}" cy="${-r.y}" rx="${r.w/2}" ry="${r.h/2}" fill="none" stroke="var(--accent)" stroke-width="${lw*1.6}" stroke-dasharray="${fs*.4} ${fs*.3}"/>`;}
-  const c=fs*.6;g+=`<path d="M${-c} 0H${c}M0 ${-c}V${c}" stroke="var(--accent)" stroke-width="${lw*2.5}"/>`;
-  const tL=sign>0?'Nazal':'Temporal',tR=sign>0?'Temporal':'Nazal';
-  g+=`<text x="${x0+fs*.3}" y="${-y1+fs*1}" font-size="${fs*.85}" fill="var(--muted)">${tL}</text><text x="${x1-fs*.3}" y="${-y1+fs*1}" text-anchor="end" font-size="${fs*.85}" fill="var(--muted)">${tR}</text>`;
-  return `<svg viewBox="${x0} ${-y1} ${W} ${H}" role="img" aria-label="Görme alanı sonuç haritası">${g}</svg>`;
-}
-function relPill(s){return s.reliable?'<span class="pill ok">GÜVENİLİR</span>':'<span class="pill bad">ŞÜPHELİ</span>'}
-function renderAuto(){
-  // ayarlar
-  $('amFull').setAttribute('aria-pressed',S.amode==='full');$('amBS').setAttribute('aria-pressed',S.amode==='bs');
-  $('asp').value=String(S.asp);$('asize').value=String(S.asize);$('acon').value=S.acon;
-  $('asp').hidden=$('aspL').hidden=S.amode!=='full';
-  $('lgRef').hidden=S.amode!=='bs';
-  const L=layout(S.amode,S.eye,window.screen?.width||innerWidth,window.screen?.height||innerHeight);
-  const n=L.pts.filter(p=>!(S.amode==='full'&&inBS(p.tx,p.y,userBS(S.eye)))).length;
-  const mins=Math.max(1,Math.round(n*1.25*1.15/60*(1+1/6)));
+/* ---------- ekranlar ---------- */
+function renderTest(){
+  const m=S.tmode;
+  $('mFull').setAttribute('aria-pressed',m==='full');$('mBS').setAttribute('aria-pressed',m==='bs');$('mMan').setAttribute('aria-pressed',m==='manual');
+  $('autoBox').hidden=m==='manual';$('manBox').hidden=m!=='manual';
+  $('tEyebrow').textContent=`Yeni test · ${EYE_TR[S.eye]}`;
+  if(m==='manual'){paintGrid();renderManMini();return}
+  $('asp').value=String(S.asp);$('asize').value=String(S.asize);$('acon').value=S.acon;$('asp').hidden=$('aspL').hidden=m!=='full';
+  const L=layout(m,S.eye,window.screen?.width||innerWidth,window.screen?.height||innerHeight);
+  const n=L.pts.filter(p=>!(m==='full'&&inBS(p.tx,p.y,userBS(S.eye)))).length,mins=Math.max(1,Math.round(n*1.25*1.15*(1+1/6)/60));
   const cv=$('cover');
-  if(S.amode==='full'){
-    cv.className='cover';cv.textContent=`Bu ekran ve ${S.dist} cm mesafede: yatay ±${fmt(L.ext.x0,0)}°, dikey ±${fmt(L.ext.y,0)}° · ${n} nokta · yaklaşık ${mins} dk`;
-  }else{
-    const ok=L.pts.length>=L.want*.9;
-    cv.className='cover'+(ok?'':' bad');
-    cv.textContent=ok?`Kör nokta bölgesi (temporal 10–21°, −8…+5°) ekrana sığıyor · ${L.pts.length} nokta, 1° aralık · yaklaşık ${mins} dk`
-      :`Kör nokta bölgesinin yalnızca ${L.pts.length}/${L.want} noktası ekrana sığıyor. Ekrana biraz yaklaş (mesafeyi azalt) ya da daha geniş bir ekran kullan.`;
-  }
-  const other=S.eye==='R'?'sol':'sağ', eyeTr=S.eye==='R'?'Sağ':'Sol';
-  $('steps').innerHTML=[
-    `Ekranla gözün arasını ${S.dist} cm'ye sabitle, ışığı loş tut. Gözlüğün varsa tak.`,
-    `${other[0].toUpperCase()+other.slice(1)} gözünü kapat ya da elinle ört. ${eyeTr} göz açık kalsın.`,
-    S.amode==='full'?'Test boyunca yalnızca sarı artıya bak. Gözünü noktaları aramak için kaydırma.':'Sarı artı ekranın kenarında olacak. Yalnızca ona bak; noktalar yan tarafta çıkar.',
-    'Bir nokta yanıp söndüğünü fark ettiğin an boşluk tuşuna bas ya da ekranın herhangi bir yerine dokun.',
-    'Emin olmadığında basma. Bazı denemelerde bilerek hiçbir şey gösterilmez.'
-  ].map(t=>`<li>${t}</li>`).join('');
+  if(m==='full'){cv.className='readout';cv.textContent=`${S.dist} cm · yatay ±${fmt(L.ext.x0,0)}° · dikey ±${fmt(L.ext.y,0)}° · ${n} nokta · ~${mins} dk`}
+  else{const ok=L.pts.length>=L.want*.9;cv.className='readout'+(ok?'':' bad');
+    cv.textContent=ok?`${S.dist} cm · temporal 10–21°, −8…+5° bölgesi · ${L.pts.length} nokta, 1° aralık · ~${mins} dk`:`Kör nokta bölgesinin yalnızca ${L.pts.length}/${L.want} noktası ekrana sığıyor. Ekrana biraz yaklaş ya da daha geniş bir ekran kullan.`}
+  const other=S.eye==='R'?'Sol':'Sağ';
+  $('steps').innerHTML=[`Ekrandan ${S.dist} cm uzağa otur, ışığı loş tut. Gözlüğün varsa tak.`,`${other} gözünü kapat ya da elinle ört.`,
+    m==='full'?'Yalnızca sarı artıya bak. Noktaları aramak için gözünü kaydırma.':'Artı ekranın kenarında olacak. Yalnızca ona bak; noktalar yanda çıkar.',
+    'Bir nokta yanıp söndüğünü fark ettiğin an boşluğa bas ya da ekrana dokun.','Emin değilsen basma. Bazı denemelerde bilerek hiçbir şey gösterilmez.'].map(t=>`<li>${t}</li>`).join('');
+}
+function legendFor(h){
+  const it=[];if(h.type==='manual')it.push('<span><i class="sw u"></i>Görülmeyen</span>','<span><i class="sw b"></i>Bulanık</span>');
+  else{it.push('<span><i class="sw u"></i>Görülmeyen</span>','<span><i class="sw s"></i>Görülen</span>');if(h.mode==='full')it.push('<span><i class="sw g"></i>Kör nokta, test edilmedi</span>');if(h.mode==='bs')it.push('<span><i class="lg-ref"></i>Literatürdeki kör nokta</span>')}
+  it.push('<span><i class="lg-ov"></i>Önceki testte görülmeyen</span>');return it.join('')}
+function sameKind(a,b){return a.eye===b.eye&&a.type===b.type&&(a.type==='manual'||(a.mode===b.mode&&a.sp===b.sp))}
+function renderRes(){
+  let h=byId(S.sel);
+  if(!h||h.eye!==S.eye){h=S.hist.filter(x=>x.eye===S.eye).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;S.sel=h?.id||null}
+  if(!h){$('rEyebrow').textContent=EYE_TR[S.eye];$('rTitle').textContent='Henüz test yok';$('rChips').innerHTML='';
+    $('map').innerHTML=`<p class="note" style="margin:12px">${EYE_TR[S.eye][0].toUpperCase()+EYE_TR[S.eye].slice(1)} için kayıt yok. Test ekranından ilk testini yap.</p>`;$('mapLegend').innerHTML='';
+    $('rStats').innerHTML='<p class="note" style="margin:0">Test bitince alan, yüzde ve güvenilirlik burada çıkar.</p>';$('cmp').innerHTML='';$('cmp').disabled=true;$('cmpOut').innerHTML='';renderTrend();return}
+  const olders=S.hist.filter(x=>x.id!==h.id&&sameKind(x,h)&&x.date<h.date).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!olders.find(x=>x.id===S.cmpSel))S.cmpSel=olders[0]?.id||null;
+  const prev=byId(S.cmpSel),s=statsOf(h);
+  $('rEyebrow').textContent=`${EYE_TR[h.eye]} · ${dtstr(h.date)}`;
+  $('rTitle').textContent=h.type==='manual'?'Elle işaretleme':h.mode==='bs'?'Kör nokta doğrulama':'Otomatik tam alan';
+  $('rChips').innerHTML=(h.type==='auto'?`<span class="status ${s.reliable?'ok':'bad'}">${s.reliable?'GÜVENİLİR':'ŞÜPHELİ'}</span>`:'')+(h.ex?'<span class="chip ex">Örnek</span>':'');
+  $('map').innerHTML=mapSVG(h,prev);$('mapLegend').innerHTML=legendFor(h);
 
-  // seçili sonuç
-  const autos=S.hist.filter(h=>h.type==='auto');
-  let rec=byId(S.selAuto);
-  if(!rec||rec.type!=='auto'||rec.eye!==S.eye||rec.mode!==S.amode){
-    rec=autos.filter(h=>h.eye===S.eye&&h.mode===S.amode).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;S.selAuto=rec?.id||null;}
-  const same=autos.filter(h=>rec&&h.id!==rec.id&&h.eye===rec.eye&&h.mode===rec.mode&&h.sp===rec.sp&&h.date<rec.date).sort((a,b)=>b.date.localeCompare(a.date));
-  if(!same.find(h=>h.id===S.cmpAuto))S.cmpAuto=same[0]?.id||null;
-  const prev=byId(S.cmpAuto);
-  $('statsTitle').textContent=S.amode==='bs'?'Bu test · kör nokta doğrulama':'Bu test · otomatik tam alan';
-  if(!rec){
-    $('amap').innerHTML=`<p class="note" style="margin:8px">${S.eye==='R'?'Sağ':'Sol'} göz için ${S.amode==='bs'?'kör nokta doğrulaması':'otomatik test'} henüz yok. “Testi başlat”a bas; sonuç haritası burada görünür.</p>`;
-    $('amapSub').textContent='';$('statsBody').innerHTML='<p class="note" style="margin:0">Test bitince alan, yüzde ve güvenilirlik burada çıkar.</p>';
-    fillCmp([],null);$('cmpOut').innerHTML='<p class="note">Aynı göz ve aynı test türünden ikinci kayıt olunca burada fark görünür.</p>';return;
-  }
-  $('amap').innerHTML=autoMap(rec,prev);
-  $('amapTitle').textContent=(rec.mode==='bs'?'Kör nokta haritası':'Sonuç haritası')+' · '+(rec.eye==='R'?'sağ göz':'sol göz');
-  $('amapSub').innerHTML=`${dtstr(rec.date)}${rec.ex?' · örnek':''}${prev?` · mor çerçeve: ${dstr(prev.date)}`:''}`;
-  const s=autoStats(rec);
-  const flTxt=rec.fl&&rec.fl[1]?`${rec.fl[0]}/${rec.fl[1]}`:'yok';
-  let html=`<div class="kpis">
-    <div class="k u"><b>${fmt(s.pu)}%</b><small>${s.u}/${s.tot} nokta görülmedi</small></div>
-    <div class="k"><b>${fmt(s.area,0)}</b><small>alan, derece²</small></div>
-    <div class="k ${s.reliable?'ok':'bad'}"><b style="font-size:1.05rem;padding-top:.3rem">${relPill(s)}</b><small>sabitleme kaybı ${flTxt} · yanlış pozitif ${rec.fp[0]}/${rec.fp[1]}</small></div></div>`;
-  if(rec.mode==='full'){
-    html+=`<div class="tscroll"><table style="margin-top:14px"><thead><tr><th>Kadran</th><th class="n">Görülmeyen</th><th class="n">Alan °²</th></tr></thead>
-      <tbody>${Object.keys(QN).map(k=>`<tr><td>${QN[k]}</td><td class="n">${s.q[k][0]}</td><td class="n">${fmt(s.q[k][0]*rec.sp*rec.sp,0)}</td></tr>`).join('')}</tbody></table></div>
-      <p class="note">${s.u?`Ağırlık merkezi sabitleme noktasının ${fmt(Math.hypot(s.cx,s.cy))}° ${dirText(s.cx,s.cy)}. En uzak görülmeyen nokta ${fmt(s.maxE)}°.`:'Görülmeyen nokta yok.'} Kör nokta bölgesi (${rec.bsRef?.src||'literatür'}) hesaba katılmadı. ${rec.fl&&rec.fl[1]?'':'Kör nokta ekrana sığmadığı için sabitleme yoklaması yapılamadı.'} Süre ${Math.round(rec.dur/60)} dk · ${CON_TR[rec.con]||''} parlaklık · ${rec.dist} cm.</p>`;
+  // istatistik
+  let html='<p class="eyebrow">Sonuç</p>';
+  if(h.type==='manual'){
+    html+=`<div class="big"><div class="u"><b>${fmt(s.pu)}%</b><small>${s.u} hücre görülmedi</small></div><div><b>${fmt(s.area)}</b><small>alan, derece²</small></div><div><b>${s.b}</b><small>bulanık hücre</small></div></div>
+      <div class="tscroll"><table style="margin-top:12px"><thead><tr><th>KADRAN</th><th class="n">GÖRÜLMEYEN</th><th class="n">BULANIK</th><th class="n">ALAN °²</th></tr></thead><tbody>
+      ${Object.keys(QN).map(k=>`<tr><td>${QN[k]}</td><td class="n">${s.q[k][0]}</td><td class="n">${s.q[k][1]}</td><td class="n">${fmt(s.q[k][0]*s.cd*s.cd)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="note">${s.u+s.b?`Ağırlık merkezi artının ${fmt(Math.hypot(s.cx,s.cy))}° ${dirText(s.cx,s.cy)}.`:'İşaretli hücre yok.'} Elle işaretlemede güvenilirlik ölçülmez.</p>`;
+  }else if(h.mode==='full'){
+    const flTxt=h.fl&&h.fl[1]?`${h.fl[0]}/${h.fl[1]}`:'—';
+    html+=`<div class="big"><div class="u"><b>${fmt(s.pu)}%</b><small>${s.u}/${s.tot} nokta görülmedi</small></div><div><b>${fmt(s.area,0)}</b><small>alan, derece²</small></div><div><b>${fmt(Math.hypot(s.cx,s.cy))}°</b><small>merkezin artıya uzaklığı</small></div></div>
+      <div class="tscroll"><table style="margin-top:12px"><thead><tr><th>KADRAN</th><th class="n">GÖRÜLMEYEN</th><th class="n">ALAN °²</th></tr></thead><tbody>
+      ${Object.keys(QN).map(k=>`<tr><td>${QN[k]}</td><td class="n">${s.q[k][0]}</td><td class="n">${fmt(s.q[k][0]*h.sp*h.sp,0)}</td></tr>`).join('')}</tbody></table></div>
+      <h3>Güvenilirlik</h3><div class="tscroll"><table><tbody>
+      <tr><td>Sabitleme kaybı</td><td class="n">${flTxt}</td><td class="n">${s.flr===null?'ölçülemedi':fmt(s.flr*100,0)+'%'}</td><td class="n">sınır 20%</td></tr>
+      <tr><td>Yanlış pozitif</td><td class="n">${h.fp[0]}/${h.fp[1]}</td><td class="n">${fmt(s.fpr*100,0)}%</td><td class="n">sınır 15%</td></tr></tbody></table></div>
+      <p class="note">${s.u?`Lekenin ağırlık merkezi ${dirText(s.cx,s.cy)}; en uzak görülmeyen nokta ${fmt(s.maxE)}°.`:'Görülmeyen nokta yok.'} Kör nokta (${h.bsRef?.src||'literatür'}) alana katılmadı. ${Math.round(h.dur/60)} dk · ${CON_TR[h.con]||''} parlaklık · ${h.dist} cm.</p>`;
   }else{
     const b=s.bs,R=BS_REF;
-    html+=b?`<div class="tscroll"><table style="margin-top:14px"><thead><tr><th></th><th class="n">Ölçülen</th><th class="n">Literatür</th><th class="n">Fark</th></tr></thead><tbody>
+    html+=b?`<div class="big"><div><b>${fmt(b.x)}°</b><small>merkez, temporal (lit. ${fmt(R.x)}°)</small></div><div><b>${fmt(b.w,1)}×${fmt(b.h,1)}</b><small>boyut ° (lit. ${fmt(R.w)}×${fmt(R.h)})</small></div><div><b>${fmt(Math.hypot(b.x-R.x,b.y-R.y))}°</b><small>merkez hatası</small></div></div>
+      <div class="tscroll"><table style="margin-top:12px"><thead><tr><th></th><th class="n">ÖLÇÜLEN</th><th class="n">LİTERATÜR</th><th class="n">FARK</th></tr></thead><tbody>
       <tr><td>Merkez, temporal</td><td class="n">${fmt(b.x)}°</td><td class="n">${fmt(R.x)}°</td><td class="n">${dlt(R.x,b.x)}°</td></tr>
       <tr><td>Merkez, dikey</td><td class="n">${fmt(b.y)}°</td><td class="n">${fmt(R.y)}°</td><td class="n">${dlt(R.y,b.y)}°</td></tr>
       <tr><td>Genişlik</td><td class="n">${fmt(b.w)}°</td><td class="n">${fmt(R.w)}°</td><td class="n">${dlt(R.w,b.w)}°</td></tr>
       <tr><td>Yükseklik</td><td class="n">${fmt(b.h)}°</td><td class="n">${fmt(R.h)}°</td><td class="n">${dlt(R.h,b.h)}°</td></tr>
-      <tr><td>Alan</td><td class="n">${fmt(b.area,0)}°²</td><td class="n">${fmt(R.area,0)}°²</td><td class="n">${dlt(R.area,b.area,0)}°²</td></tr>
-      </tbody></table></div>
-      <p class="note">Literatür değerleri yetişkin ortalamasıdır; kişiden kişiye merkez ±1–2°, boyut ±1–1,5° oynar. Merkez hatası ${fmt(Math.hypot(b.x-R.x,b.y-R.y))}°.</p>`
+      <tr><td>Alan</td><td class="n">${fmt(b.area,0)}°²</td><td class="n">${fmt(R.area,0)}°²</td><td class="n">${dlt(R.area,b.area,0)}°²</td></tr></tbody></table></div>
+      <p class="note">Literatür yetişkin ortalamasıdır; kişiden kişiye merkez ±1–2°, boyut ±1–1,5° oynar. Yanlış pozitif ${h.fp[0]}/${h.fp[1]}.</p>`
       :'<p class="note">Kör nokta bulunamadı. Gözün sabit kalmamış ya da mesafe yanlış olabilir; ayarları kontrol edip tekrarla.</p>';
-    const ra=repeatability(rec.eye,'bs',1,x=>x.bs?.area),rx=repeatability(rec.eye,'bs',1,x=>x.bs?.x),ry=repeatability(rec.eye,'bs',1,x=>x.bs?.y);
-    html+=`<h3>Tekrarlanabilirlik</h3>`+(ra?`<div class="tscroll"><table><thead><tr><th></th><th class="n">Ortalama</th><th class="n">SD</th><th class="n">Katsayı</th></tr></thead><tbody>
+    const ra=repeatability(h.eye,'bs',1,x=>x.bs?.area),rx=repeatability(h.eye,'bs',1,x=>x.bs?.x),ry=repeatability(h.eye,'bs',1,x=>x.bs?.y);
+    html+='<h3>Tekrarlanabilirlik</h3>'+(ra?`<div class="tscroll"><table><thead><tr><th></th><th class="n">ORT.</th><th class="n">SD</th><th class="n">KATSAYI</th></tr></thead><tbody>
       <tr><td>Alan °²</td><td class="n">${fmt(ra.mean,0)}</td><td class="n">${fmt(ra.sd)}</td><td class="n">±${fmt(ra.cor)}</td></tr>
       <tr><td>Merkez temporal °</td><td class="n">${fmt(rx.mean)}</td><td class="n">${fmt(rx.sd,2)}</td><td class="n">±${fmt(rx.cor,2)}</td></tr>
       <tr><td>Merkez dikey °</td><td class="n">${fmt(ry.mean)}</td><td class="n">${fmt(ry.sd,2)}</td><td class="n">±${fmt(ry.cor,2)}</td></tr></tbody></table></div>
-      <p class="note">${dstr(ra.day)} günündeki ${ra.n} güvenilir testten. Katsayı = 2,77 × SD; iki test arasındaki fark bunun altındaysa ölçüm gürültüsüdür.</p>`
-      :`<p class="note">Aynı gün en az 3 güvenilir kör nokta testi yapınca alan ve merkez için tekrarlanabilirlik katsayısı burada hesaplanır.</p>`);
+      <p class="note">${dstr(ra.day)} tarihli ${ra.n} güvenilir testten. Katsayı = 2,77 × SD.</p>`:'<p class="note">Aynı gün en az 3 güvenilir kör nokta testi yapınca burada tekrarlanabilirlik hesaplanır.</p>');
   }
-  $('statsBody').innerHTML=html;
+  $('rStats').innerHTML=html;
 
   // karşılaştırma
-  fillCmp(same,S.cmpAuto);
-  if(!prev){$('cmpOut').innerHTML='<p class="note">Bu sonuçtan önce aynı göz, aynı test türü ve aynı nokta aralığıyla yapılmış kayıt yok.</p>';return}
-  const ps=autoStats(prev);
-  const key=p=>p[0]+','+p[1];const pmap=new Map(prev.points.map(p=>[key(p),p[2]]));
-  let add=0,gone=0,both=0;for(const p of rec.points){const a=pmap.get(key(p));if(a===undefined||a<0||p[2]<0)continue;if(a===0&&p[2]===0)both++;else if(p[2]===0)add++;else if(a===0)gone++;}
-  const metric=rec.mode==='bs'?(x=>x.bs?.area):(x=>x.area);
-  const rep=repeatability(rec.eye,rec.mode,rec.sp,metric);
-  const curA=rec.mode==='bs'?(s.bs?.area||0):s.area, prA=rec.mode==='bs'?(ps.bs?.area||0):ps.area;
-  const dA=curA-prA;
-  const verdict=rep?(Math.abs(dA)>rep.cor?`<span class="pill sig">ANLAMLI DEĞİŞİM</span> Alan farkı ${fmt(Math.abs(dA),0)}°², tekrarlanabilirlik sınırı ±${fmt(rep.cor,0)}°².`:`<span class="pill ns">GÜRÜLTÜ İÇİNDE</span> Alan farkı ${fmt(Math.abs(dA),0)}°², tekrarlanabilirlik sınırı ±${fmt(rep.cor,0)}°².`)
-    :'Anlamlılık için aynı gün bu ayarla en az 3 güvenilir test yap; sınır o testlerden hesaplanır.';
-  const days=Math.round((new Date(rec.date)-new Date(prev.date))/864e5);
-  const warn=(!s.reliable||!ps.reliable)?' <b style="color:var(--warn)">Testlerden biri şüpheli; farkı temkinli yorumla.</b>':'';
-  $('cmpOut').innerHTML=`<div class="tscroll"><table><thead><tr><th></th><th class="n">Önceki</th><th class="n">Bu test</th><th class="n">Fark</th></tr></thead><tbody>
-   <tr><td>Görülmeyen %</td><td class="n">${fmt(ps.pu)}</td><td class="n">${fmt(s.pu)}</td><td class="n">${dlt(ps.pu,s.pu)}</td></tr>
-   <tr><td>Alan °²</td><td class="n">${fmt(prA,0)}</td><td class="n">${fmt(curA,0)}</td><td class="n">${dlt(prA,curA,0)}</td></tr>
-   ${rec.mode==='full'?`<tr><td>Merkeze uzaklık °</td><td class="n">${fmt(Math.hypot(ps.cx,ps.cy))}</td><td class="n">${fmt(Math.hypot(s.cx,s.cy))}</td><td class="n">${dlt(Math.hypot(ps.cx,ps.cy),Math.hypot(s.cx,s.cy))}</td></tr>`:''}
-  </tbody></table></div>
-  <p class="note">${verdict}</p>
-  <p class="note">${days} gün arayla: <b class="delta-up">${add}</b> yeni görülmeyen nokta, <b class="delta-dn">${gone}</b> nokta artık görülüyor, ${both} nokta iki testte de görülmedi.${warn}</p>`;
+  const el=$('cmp');el.innerHTML=olders.length?olders.map(x=>`<option value="${x.id}"${x.id===S.cmpSel?' selected':''}>${dtstr(x.date)}${x.ex?' (örnek)':''}</option>`).join(''):'<option>Önceki kayıt yok</option>';el.disabled=!olders.length;
+  if(!prev){$('cmpOut').innerHTML='<p class="note" style="margin:0">Bu testten önce aynı göz ve aynı test türüyle yapılmış kayıt yok.</p>';renderTrend();return}
+  const ps=statsOf(prev),mp=mapPoints(h),pp=mapPoints(prev);
+  const key=p=>fmt(p[0],2)+','+fmt(p[1],2),pm=new Map(pp.pts.map(p=>[key(p),p[2]]));
+  let add=0,gone=0,both=0;
+  if(h.type==='manual'){const a=decode(prev.mask),b=decode(h.mask);for(let i=0;i<N*N;i++){const x=a[i]>0,y=b[i]>0;if(x&&y)both++;else if(y)add++;else if(x)gone++}}
+  else for(const p of mp.pts){const a=pm.get(key(p));if(a===undefined||a<0||p[2]<0)continue;if(a===0&&p[2]===0)both++;else if(p[2]===0)add++;else if(a===0)gone++}
+  const curA=h.mode==='bs'?(s.bs?.area||0):s.area,prA=h.mode==='bs'?(ps.bs?.area||0):ps.area,dA=curA-prA;
+  const rep=h.type==='auto'?repeatability(h.eye,h.mode,h.sp,h.mode==='bs'?(x=>x.bs?.area):(x=>x.area)):null;
+  const verdict=h.type==='manual'?'<span class="status ns">ELLE · ANLAMLILIK YOK</span><p>Elle işaretlemede ölçüm gürültüsü bilinmediği için fark yorumlanamaz. Bunun için otomatik testi kullan.</p>'
+    :rep?(Math.abs(dA)>rep.cor?`<span class="status sig">ANLAMLI DEĞİŞİM</span><p>Alan farkı ${fmt(Math.abs(dA),0)}°²; bu ayarda ölçüm gürültüsü ±${fmt(rep.cor,0)}°². Fark gürültüden büyük.</p>`
+      :`<span class="status ns">GÜRÜLTÜ İÇİNDE</span><p>Alan farkı ${fmt(Math.abs(dA),0)}°²; bu ayarda ölçüm gürültüsü ±${fmt(rep.cor,0)}°². Gerçek bir değişim sayılmaz.</p>`)
+    :'<span class="status ns">EŞİK HENÜZ YOK</span><p>Aynı gün bu ayarla 3 güvenilir test yapınca ölçüm gürültüsü hesaplanır ve fark burada yorumlanır.</p>';
+  const days=Math.round((new Date(h.date)-new Date(prev.date))/864e5);
+  const warn=h.type==='auto'&&(!s.reliable||!ps.reliable)?'<p style="color:var(--warn)">Testlerden biri şüpheli; farkı temkinli yorumla.</p>':'';
+  $('cmpOut').innerHTML=`<div class="tscroll"><table><thead><tr><th></th><th class="n">ÖNCEKİ</th><th class="n">BU TEST</th><th class="n">FARK</th></tr></thead><tbody>
+    <tr><td>Görülmeyen %</td><td class="n">${fmt(ps.pu)}</td><td class="n">${fmt(s.pu)}</td><td class="n">${dlt(ps.pu,s.pu)}</td></tr>
+    <tr><td>Alan °²</td><td class="n">${fmt(prA,0)}</td><td class="n">${fmt(curA,0)}</td><td class="n">${dlt(prA,curA,0)}</td></tr>
+    ${h.mode!=='bs'?`<tr><td>Merkeze uzaklık °</td><td class="n">${fmt(Math.hypot(ps.cx,ps.cy))}</td><td class="n">${fmt(Math.hypot(s.cx,s.cy))}</td><td class="n">${dlt(Math.hypot(ps.cx,ps.cy),Math.hypot(s.cx,s.cy))}</td></tr>`:''}
+    </tbody></table></div>
+    <div class="verdict">${verdict}<p>${days} gün arayla: <b class="up">${add}</b> yeni görülmeyen, <b class="dn">${gone}</b> artık görülen, ${both} iki testte de görülmeyen.</p>${warn}</div>`;
+  renderTrend();
 }
-
-/* ---------- trend ve geçmiş ---------- */
-function seriesValue(h){if(h.type==='manual')return manualStats(decode(h.mask),h.cellDeg,h.eye).pu;const s=autoStats(h);return s.pu}
 function renderTrend(){
-  const box=$('trend');const auto=S.tab==='auto';
-  const pick=h=>auto?(h.type==='auto'&&h.mode==='full'):h.type==='manual';
-  $('trendTitle').textContent=auto?'Zaman içinde · otomatik tam alan, görülmeyen %':'Zaman içinde · elle işaretleme, görülmeyen %';
-  const pts=S.hist.filter(pick).sort((a,b)=>a.date.localeCompare(b.date)).map(h=>({h,v:seriesValue(h)}));
-  if(pts.length<2){box.innerHTML='<p class="note">En az iki kayıt olunca grafik çizilir.</p>';return}
-  const W=360,H=150,L=34,R=10,T=10,B=26;
-  const t0=+new Date(pts[0].h.date),t1=Math.max(+new Date(pts[pts.length-1].h.date),t0+864e5);
-  const ymaxRaw=Math.max(...pts.map(p=>p.v),1);const step=ymaxRaw>20?10:ymaxRaw>10?5:ymaxRaw>4?2:1;const ymax=Math.ceil(ymaxRaw/step)*step;
+  const h=byId(S.sel),auto=!h||h.type==='auto',box=$('trend');
+  const pick=x=>auto?(x.type==='auto'&&x.mode==='full'):x.type==='manual';
+  $('trendTitle').textContent=auto?'Zaman içinde · tam alan, görülmeyen %':'Zaman içinde · elle, görülmeyen %';
+  const pts=S.hist.filter(pick).sort((a,b)=>a.date.localeCompare(b.date)).map(x=>({h:x,v:statsOf(x).pu}));
+  if(pts.length<2){box.innerHTML='<p class="note" style="margin:0">En az iki kayıt olunca grafik çizilir.</p>';return}
+  const W=360,H=150,L=30,R=10,T=10,B=26,t0=+new Date(pts[0].h.date),t1=Math.max(+new Date(pts[pts.length-1].h.date),t0+864e5);
+  const yr=Math.max(...pts.map(p=>p.v),1),step=yr>20?10:yr>10?5:yr>4?2:1,ymax=Math.ceil(yr/step)*step;
   const X=t=>L+(W-L-R)*((t-t0)/(t1-t0)),Y=v=>T+(H-T-B)*(1-v/ymax);
-  let g='';for(let v=0;v<=ymax;v+=step){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--f-mono)">${v}</text>`}
-  g+=`<text x="${L}" y="${H-6}" font-size="10" fill="var(--muted)">${dstr(t0)}</text><text x="${W-R}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)">${dstr(t1)}</text>`;
+  let g='';for(let v=0;v<=ymax;v+=step)g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--f-mono)">${v}</text>`;
+  g+=`<text x="${L}" y="${H-6}" font-size="10" fill="var(--muted)" font-family="var(--f-mono)">${dstr(t0)}</text><text x="${W-R}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--f-mono)">${dstr(t1)}</text>`;
   ['R','L'].forEach(e=>{const ps=pts.filter(p=>p.h.eye===e);if(!ps.length)return;const col=e==='R'?'var(--ink)':'var(--accent)';
     if(ps.length>1)g+=`<polyline fill="none" stroke="${col}" stroke-width="2" points="${ps.map(p=>X(+new Date(p.h.date))+','+Y(p.v)).join(' ')}"/>`;
-    ps.forEach((p,k)=>g+=`<circle cx="${X(+new Date(p.h.date))}" cy="${Y(p.v)}" r="${k===ps.length-1?4.5:3}" fill="${k===ps.length-1?col:'var(--paper)'}" stroke="${col}" stroke-width="2"><title>${dstr(p.h.date)} · ${fmt(p.v)}%</title></circle>`);});
-  box.innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Görülmeyen alan yüzdesi zaman içinde">${g}</svg>
-  <div class="legend"><span><i class="sw" style="background:var(--ink)"></i>Sağ göz</span><span><i class="sw" style="background:var(--accent)"></i>Sol göz</span></div>`;
+    ps.forEach((p,k)=>g+=`<circle cx="${X(+new Date(p.h.date))}" cy="${Y(p.v)}" r="${k===ps.length-1?4.5:3}" fill="${k===ps.length-1?col:'var(--panel)'}" stroke="${col}" stroke-width="2"><title>${dstr(p.h.date)} · ${fmt(p.v)}%</title></circle>`)});
+  box.innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Görülmeyen alan yüzdesi zaman içinde">${g}</svg><div class="legend"><span><i class="sw" style="background:var(--ink)"></i>Sağ göz</span><span><i class="sw" style="background:var(--accent)"></i>Sol göz</span></div>`;
 }
 function renderHist(){
   const list=S.hist.slice().sort((a,b)=>b.date.localeCompare(a.date));
-  if(!list.length){$('hist').innerHTML='<p class="note">Henüz kayıt yok.</p>';return}
-  $('hist').innerHTML=list.map(h=>{
-    let tag,meta;
-    if(h.type==='manual'){const s=manualStats(decode(h.mask),h.cellDeg,h.eye);tag='ELLE';meta=`${fmt(s.pu)}% · ${fmt(s.area)}°² · bulanık ${s.b}`}
-    else{const s=autoStats(h);tag=h.mode==='bs'?'KÖR NOKTA':'OTOMATİK '+h.sp+'°';
-      meta=h.mode==='bs'?(s.bs?`merkez ${fmt(s.bs.x)}°/${fmt(s.bs.y)}° · ${fmt(s.bs.area,0)}°²`:'kör nokta bulunamadı'):`${fmt(s.pu)}% · ${fmt(s.area,0)}°²`;
-      meta+=s.reliable?' · güvenilir':' · şüpheli';}
-    const sel=(h.id===S.selAuto&&S.tab==='auto')||(h.id===S.cmp&&S.tab==='manual')||(h.id===S.cmpAuto&&S.tab==='auto');
-    return `<div class="hrow${sel?' sel':''}"><span class="eye ${h.eye}">${h.eye==='R'?'SAĞ':'SOL'}</span>
-    <div class="meta"><div>${dtstr(h.date)}<span class="tag">${tag}</span>${h.ex?'<span class="tag ex">ÖRNEK</span>':''}</div>
-    <div>${meta}${h.note&&!h.ex?' · '+esc(h.note):''}</div></div>
-    <div class="acts"><button class="small" data-a="load" data-id="${h.id}">Aç</button><button class="small danger" data-a="del" data-id="${h.id}">Sil</button></div></div>`}).join('');
+  if(!list.length){$('hist').innerHTML='<p class="note" style="margin:0">Henüz kayıt yok.</p>';return}
+  $('hist').innerHTML=list.map(h=>{const s=statsOf(h);let meta;
+    if(h.type==='manual')meta=`${fmt(s.pu)}% · ${fmt(s.area)}°² · bulanık ${s.b}`;
+    else if(h.mode==='bs')meta=(s.bs?`merkez ${fmt(s.bs.x)}° / ${fmt(s.bs.y)}° · ${fmt(s.bs.area,0)}°²`:'kör nokta bulunamadı')+(s.reliable?' · güvenilir':' · şüpheli');
+    else meta=`${fmt(s.pu)}% · ${fmt(s.area,0)}°²`+(s.reliable?' · güvenilir':' · şüpheli');
+    return `<div class="hrow${h.id===S.sel?' sel':''}"><span class="eyebadge ${h.eye}">${h.eye==='R'?'SAĞ':'SOL'}</span>
+      <div class="meta"><div>${dtstr(h.date)}<span class="chip">${TYPE_TR(h)}</span>${h.ex?'<span class="chip ex">Örnek</span>':''}</div><div>${meta}${h.note&&!h.ex?' · '+esc(h.note):''}</div></div>
+      <div class="acts"><button class="btn sm" data-a="load" data-id="${h.id}">Aç</button><button class="btn sm danger" data-a="del" data-id="${h.id}">Sil</button></div></div>`}).join('');
 }
-
+function renderSet(){$('calbox').style.width=(85.6*S.ppm)+'px';$('scaleInfo').textContent=`Bu ayarla ${S.dist} cm'de 1 cm ekran ≈ ${fmt(px2deg(10*S.ppm),2)}°.`}
 function all(){
-  const auto=S.tab==='auto';
-  $('tabA').setAttribute('aria-selected',auto);$('tabM').setAttribute('aria-selected',!auto);
-  $('paneA').hidden=!auto;$('paneM').hidden=auto;$('toolSeg').hidden=auto;
+  ['test','res','hist','set'].forEach(v=>{$('v-'+v).hidden=S.view!==v});
+  document.querySelectorAll('nav.views button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===S.view?'page':'false'));
   $('eyeR').setAttribute('aria-pressed',S.eye==='R');$('eyeL').setAttribute('aria-pressed',S.eye==='L');
-  if(auto)renderAuto();else{paintGrid();renderManual()}
-  $('scaleInfo').textContent=`Bu ayarla 1 cm ekran ≈ ${fmt(px2deg(10*S.ppm),2)}°. Elle işaretleme ızgarası ±${fmt(cellDeg()*N/2)}° kapsıyor.`;
-  renderTrend();renderHist();persist();
+  if(S.view==='test')renderTest();else if(S.view==='res')renderRes();else if(S.view==='hist')renderHist();else renderSet();
+  persist();
 }
 
-/* ---------- manuel boyama ---------- */
-let painting=false,pval=0,undo=[];
-const idxAt=(x,y)=>{const el=document.elementFromPoint(x,y);const c=el&&el.closest&&el.closest('.c');return c?+c.dataset.i:-1};
-function setCell(i){if(i<0||i===CI||S.mask[i]===pval)return;S.mask[i]=pval;const el=cells[i];el.classList.toggle('v2',pval===2);el.classList.toggle('v1',pval===1);}
-grid.addEventListener('pointerdown',e=>{const i=idxAt(e.clientX,e.clientY);if(i<0||i===CI)return;
-  undo.push(S.mask.slice());if(undo.length>60)undo.shift();
-  pval=(S.tool!==0&&S.mask[i]===S.tool)?0:S.tool;painting=true;grid.setPointerCapture(e.pointerId);setCell(i);e.preventDefault();});
-grid.addEventListener('pointermove',e=>{if(painting)setCell(idxAt(e.clientX,e.clientY))});
-const endPaint=()=>{if(painting){painting=false;all()}};
-grid.addEventListener('pointerup',endPaint);grid.addEventListener('pointercancel',endPaint);
-
-/* ---------- kontroller ---------- */
-$('tabA').onclick=()=>{S.tab='auto';all()};$('tabM').onclick=()=>{S.tab='manual';all()};
-const setEye=e=>{S.eye=e;S.cmp=null;S.selAuto=null;S.cmpAuto=null;all()};
+/* ---------- etkileşim ---------- */
+document.querySelectorAll('nav.views button').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;all();scrollTo(0,0)});
+const setEye=e=>{S.eye=e;S.sel=null;S.cmpSel=null;all()};
 $('eyeR').onclick=()=>setEye('R');$('eyeL').onclick=()=>setEye('L');
+$('mFull').onclick=()=>{S.tmode='full';all()};$('mBS').onclick=()=>{S.tmode='bs';all()};$('mMan').onclick=()=>{S.tmode='manual';all()};
+$('asp').onchange=e=>{S.asp=+e.target.value;all()};$('asize').onchange=e=>{S.asize=+e.target.value;all()};$('acon').onchange=e=>{S.acon=e.target.value;all()};
+$('cmp').onchange=e=>{S.cmpSel=e.target.value;all()};
+$('dist').oninput=e=>{const v=+e.target.value;if(v>=15&&v<=150){S.dist=v;all()}};
+$('ppm').oninput=e=>{S.ppm=+e.target.value;all()};
+let painting=false,pval=0,undo=[];
+const idxAt=(x,y)=>{const el=document.elementFromPoint(x,y),c=el&&el.closest&&el.closest('.c');return c?+c.dataset.i:-1};
+function setCell(i){if(i<0||i===CI||S.mask[i]===pval)return;S.mask[i]=pval;cells[i].classList.toggle('v2',pval===2);cells[i].classList.toggle('v1',pval===1)}
+grid.addEventListener('pointerdown',e=>{const i=idxAt(e.clientX,e.clientY);if(i<0||i===CI)return;undo.push(S.mask.slice());if(undo.length>60)undo.shift();
+  pval=(S.tool!==0&&S.mask[i]===S.tool)?0:S.tool;painting=true;grid.setPointerCapture(e.pointerId);setCell(i);e.preventDefault()});
+grid.addEventListener('pointermove',e=>{if(painting)setCell(idxAt(e.clientX,e.clientY))});
+const endPaint=()=>{if(painting){painting=false;renderManMini();persist()}};
+grid.addEventListener('pointerup',endPaint);grid.addEventListener('pointercancel',endPaint);
 const setTool=t=>{S.tool=t;[['tU',2],['tB',1],['tE',0]].forEach(([id,v])=>$(id).setAttribute('aria-pressed',v===t));persist()};
 $('tU').onclick=()=>setTool(2);$('tB').onclick=()=>setTool(1);$('tE').onclick=()=>setTool(0);
 $('undo').onclick=()=>{if(undo.length){S.mask=undo.pop();all()}};
-let clearArm=0;$('clear').onclick=()=>{if(Date.now()-clearArm<3000){undo.push(S.mask.slice());S.mask.fill(0);$('clear').textContent='Temizle';all()}else{clearArm=Date.now();$('clear').textContent='Emin misin? Tekrar bas';setTimeout(()=>$('clear').textContent='Temizle',3000)}};
+let clearArm=0;$('clear').onclick=()=>{if(Date.now()-clearArm<3000){undo.push(S.mask.slice());S.mask.fill(0);$('clear').textContent='Temizle';all()}else{clearArm=Date.now();$('clear').textContent='Emin misin?';setTimeout(()=>$('clear').textContent='Temizle',3000)}};
 $('shuffle').onclick=letters;
-$('showPrev').onchange=e=>{S.showPrev=e.target.checked;all()};
-$('cmp').onchange=e=>{if(S.tab==='auto')S.cmpAuto=e.target.value;else S.cmp=e.target.value;all()};
-$('dist').oninput=e=>{const v=+e.target.value;if(v>=15&&v<=150){S.dist=v;all()}};
-const cal=()=>{$('calbox').style.width=(85.6*S.ppm)+'px'};
-$('ppm').oninput=e=>{S.ppm=+e.target.value;cal();all()};
-$('amFull').onclick=()=>{S.amode='full';S.selAuto=null;S.cmpAuto=null;all()};
-$('amBS').onclick=()=>{S.amode='bs';S.selAuto=null;S.cmpAuto=null;all()};
-$('asp').onchange=e=>{S.asp=+e.target.value;all()};
-$('asize').onchange=e=>{S.asize=+e.target.value;all()};
-$('acon').onchange=e=>{S.acon=e.target.value;all()};
 let toastT;function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2400)}
-$('save').onclick=()=>{
-  const prevId=S.hist.filter(h=>h.type==='manual'&&h.eye===S.eye).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null;
-  S.hist.push({id:'t'+Date.now().toString(36),type:'manual',date:new Date().toISOString(),eye:S.eye,mask:S.mask.join(''),cellDeg:+cellDeg().toFixed(4),dist:S.dist,note:$('note').value.trim()});
-  S.cmp=prevId;$('note').value='';all();toast('Test kaydedildi');
-};
+$('save').onclick=()=>{const rec={id:'t'+Date.now().toString(36),type:'manual',date:new Date().toISOString(),eye:S.eye,mask:S.mask.join(''),cellDeg:+cellDeg().toFixed(4),dist:S.dist,note:$('note').value.trim()};
+  S.hist.push(rec);S.sel=rec.id;S.cmpSel=null;$('note').value='';S.view='res';all();toast('Test kaydedildi')};
 const armed={};
 $('hist').onclick=e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.id,h=byId(id);if(!h)return;
-  if(b.dataset.a==='load'){
-    S.eye=h.eye;
-    if(h.type==='auto'){S.tab='auto';S.amode=h.mode;S.selAuto=id;S.cmpAuto=null;}
-    else{undo.push(S.mask.slice());S.tab='manual';S.mask=decode(h.mask);
-      const o=S.hist.filter(x=>x.type==='manual'&&x.eye===h.eye&&x.id!==id&&x.date<h.date).sort((a,b)=>b.date.localeCompare(a.date))[0];S.cmp=o?o.id:null;}
-    all();toast('Kayıt açıldı');
-  }else if(b.dataset.a==='del'){
-    if(armed[id]&&Date.now()-armed[id]<3000){S.hist=S.hist.filter(x=>x.id!==id);if(S.cmp===id)S.cmp=null;if(S.selAuto===id)S.selAuto=null;if(S.cmpAuto===id)S.cmpAuto=null;all();toast('Kayıt silindi')}
-    else{armed[id]=Date.now();b.textContent='Emin misin?'}
-  }
-};
-$('exp').onclick=()=>{const t=JSON.stringify({v:2,hist:S.hist.filter(h=>!h.ex)});$('io').value=t;
-  const fb=()=>{$('io').select();toast('Metni seçip kopyala')};
+  if(b.dataset.a==='load'){S.eye=h.eye;S.sel=id;S.cmpSel=null;if(h.type==='manual'){undo.push(S.mask.slice());S.mask=decode(h.mask)}S.view='res';all();scrollTo(0,0)}
+  else if(armed[id]&&Date.now()-armed[id]<3000){S.hist=S.hist.filter(x=>x.id!==id);if(S.sel===id)S.sel=null;if(S.cmpSel===id)S.cmpSel=null;all();toast('Kayıt silindi')}
+  else{armed[id]=Date.now();b.textContent='Emin misin?'}};
+$('exp').onclick=()=>{const t=JSON.stringify({v:2,hist:S.hist.filter(h=>!h.ex)});$('io').value=t;const fb=()=>{$('io').select();toast('Metni seçip kopyala')};
   try{navigator.clipboard.writeText(t).then(()=>toast('Panoya kopyalandı'),fb)}catch(e){fb()}};
-$('imp').onclick=()=>{try{const o=JSON.parse($('io').value);const arr=o.hist||o;if(!Array.isArray(arr))throw 0;
-  let n=0;arr.forEach(h=>{if(!h||!h.id||S.hist.find(x=>x.id===h.id))return;if(!h.type)h.type='manual';
-    if((h.type==='manual'&&h.mask?.length===N*N)||(h.type==='auto'&&Array.isArray(h.points))){S.hist.push(h);n++}});all();toast(n+' kayıt eklendi')}
-  catch(e){toast('Metin okunamadı: yedekten kopyaladığın metnin tamamını yapıştır')}};
+$('imp').onclick=()=>{try{const o=JSON.parse($('io').value),arr=o.hist||o;if(!Array.isArray(arr))throw 0;let n=0;
+  arr.forEach(h=>{if(!h||!h.id||byId(h.id))return;if(!h.type)h.type='manual';if((h.type==='manual'&&h.mask?.length===N*N)||(h.type==='auto'&&Array.isArray(h.points))){S.hist.push(h);n++}});all();toast(n+' kayıt eklendi')}
+  catch(e){toast('Metin okunamadı: yedek metninin tamamını yapıştır')}};
 
 /* ---------- otomatik test motoru ---------- */
 const ov=$('ov'),dot=$('ovDot'),fixEl=$('ovFix'),msg=$('ovMsg'),bar=$('ovBar'),pauseEl=$('ovPause');
@@ -688,8 +654,7 @@ function onResp(e){
   else if(e.target.closest('.pause'))return;
   const t=performance.now();
   if(RUN.waitStart){RUN.waitStart();RUN.waitStart=null;return}
-  if(RUN.win&&!RUN.win.hit&&t-RUN.win.t0>=100){RUN.win.hit=true;RUN.win.rt=t-RUN.win.t0}
-  else RUN.spur++;
+  if(RUN.win&&!RUN.win.hit&&t-RUN.win.t0>=100){RUN.win.hit=true;RUN.win.rt=t-RUN.win.t0}else RUN.spur++;
 }
 function pause(text){if(!RUN||RUN.paused)return;RUN.paused=true;dot.hidden=true;$('ovPauseTxt').textContent=text;pauseEl.hidden=false;ov.classList.remove('running')}
 $('ovResume').onclick=()=>{if(!RUN)return;pauseEl.hidden=true;ov.classList.add('running');RUN.paused=false;RUN.resume?.()};
@@ -698,9 +663,7 @@ $('ovAbort').onclick=()=>{if(!RUN)return;if(RUN.abortArm&&Date.now()-RUN.abortAr
 document.addEventListener('keydown',e=>{if(RUN)onResp(e)});
 ov.addEventListener('pointerdown',e=>{if(RUN)onResp(e)});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&RUN)pause('Sayfadan çıkıldığı için test duraklatıldı.')});
-// Tarayıcı Esc ile tam ekrandan çıkınca keydown gelmeyebilir; testi duraklat.
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&RUN&&!RUN.waitStart)pause('Tam ekrandan çıkıldı. Ekran boyutu değiştiyse testi iptal edip yeniden başlat.')});
-
 async function waitResume(){while(RUN.paused&&!RUN.abort)await new Promise(r=>RUN.resume=r)}
 async function runTest(){
   if(RUN)return;
@@ -708,59 +671,48 @@ async function runTest(){
   try{await ov.requestFullscreen?.()}catch(e){}
   let wake=null;try{wake=await navigator.wakeLock?.request('screen')}catch(e){}
   await sleep(350);
-  const vw=ov.clientWidth,vh=ov.clientHeight,eye=S.eye,mode=S.amode;
-  const L=layout(mode,eye,vw,vh);
-  const bsRef=mode==='full'?userBS(eye):null;
-  const tested=[],skipped=[];
+  const vw=ov.clientWidth,vh=ov.clientHeight,eye=S.eye,mode=S.tmode,L=layout(mode,eye,vw,vh),bsRef=mode==='full'?userBS(eye):null,tested=[],skipped=[];
   L.pts.forEach(p=>{(mode==='full'&&inBS(p.tx,p.y,bsRef)?skipped:tested).push(p)});
   if(tested.length<8){await finishOverlay(wake);toast('Bu ekran ve mesafede yeterli nokta sığmıyor. Mesafeyi azalt ya da daha büyük ekran kullan.');return}
-  // sabitleme yoklama noktası
   let flPos=null;
   if(mode==='full'){const px=L.fx+L.sign*deg2px(bsRef.x),py=L.fy-deg2px(bsRef.y);if(px>10&&px<vw-10&&py>10&&py<vh-10)flPos={px,py}}
   const nC=Math.max(3,Math.round(tested.length/12));
-  let Q=shuffle(tested.map(p=>({k:'stim',p,re:false})));
+  const Q=shuffle(tested.map(p=>({k:'stim',p,re:false})));
   const ins=t=>Q.splice(3+Math.floor(Math.random()*Math.max(1,Q.length-3)),0,t);
   for(let i=0;i<nC;i++){ins({k:'fp'});if(flPos)ins({k:'fl'})}
-  const size=Math.max(3,deg2px(S.asize));
-  dot.style.width=dot.style.height=size+'px';dot.style.background=CON[S.acon];
+  const size=Math.max(3,deg2px(S.asize));dot.style.width=dot.style.height=size+'px';dot.style.background=CON[S.acon];
   fixEl.style.left=L.fx+'px';fixEl.style.top=L.fy+'px';
   RUN={paused:false,abort:false,spur:0,win:null,waitStart:null};
-  const eyeTr=eye==='R'?'sağ':'sol';
-  msg.innerHTML=`<b>${eyeTr[0].toUpperCase()+eyeTr.slice(1)} göz testi.</b> Diğer gözünü kapat ve sarı artıya bak.<br>Nokta görünce <b>boşluk</b> tuşuna bas ya da ekrana dokun.<br>Başlamak için şimdi bir kez bas.`;
+  const eyeTr=eye==='R'?'Sağ':'Sol';
+  msg.innerHTML=`<b>${eyeTr} göz testi.</b> Diğer gözünü kapat ve sarı artıya bak.<br>Nokta görünce <b>boşluk</b> tuşuna bas ya da ekrana dokun.<br>Başlamak için şimdi bir kez bas.`;
   await new Promise(r=>RUN.waitStart=r);
   msg.innerHTML='';ov.classList.add('running');
-  const res=new Map(),fl=[0,0],fp=[0,0],t0=Date.now();let done=0;const totalTrials=()=>Q.length;
+  const res=new Map(),fl=[0,0],fp=[0,0],t0=Date.now();let done=0;
   for(let i=0;i<Q.length;i++){
     await waitResume();if(RUN.abort)break;
     await sleep(380+Math.random()*520);
     await waitResume();if(RUN.abort)break;
     const tr=Q[i];
     if(tr.k!=='fp'){const pos=tr.k==='fl'?flPos:tr.p;dot.style.left=(pos.px-size/2)+'px';dot.style.top=(pos.py-size/2)+'px'}
-    await frame();
-    if(tr.k!=='fp')dot.hidden=false;
+    await frame();if(tr.k!=='fp')dot.hidden=false;
     RUN.win={t0:performance.now(),hit:false};
     await sleep(200);dot.hidden=true;
     while(performance.now()-RUN.win.t0<1150&&!RUN.win.hit&&!RUN.paused)await sleep(15);
-    if(RUN.paused){ // yarım kalan denemeyi sona ekle
-      Q.push(tr);RUN.win=null;continue;}
+    if(RUN.paused){Q.push(tr);RUN.win=null;continue}
     const hit=RUN.win.hit;RUN.win=null;
     if(tr.k==='fp'){fp[1]++;if(hit)fp[0]++}
     else if(tr.k==='fl'){fl[1]++;if(hit)fl[0]++}
-    else{const key=tr.p.tx+','+tr.p.y;
-      if(hit)res.set(key,1);
-      else if(!tr.re){Q.splice(i+1+Math.floor(Math.random()*(Q.length-i)),0,{...tr,re:true})}
-      else res.set(key,0);}
-    done++;bar.style.width=Math.min(100,done/totalTrials()*100)+'%';
+    else{const key=tr.p.tx+','+tr.p.y;if(hit)res.set(key,1);else if(!tr.re)Q.splice(i+1+Math.floor(Math.random()*(Q.length-i)),0,{...tr,re:true});else res.set(key,0)}
+    done++;bar.style.width=Math.min(100,done/Q.length*100)+'%';
   }
-  const aborted=RUN.abort;const spur=RUN.spur;
+  const aborted=RUN.abort,spur=RUN.spur;
   await finishOverlay(wake);
   if(aborted){toast('Test iptal edildi, kaydedilmedi');return}
   const points=[...tested.map(p=>[p.tx,p.y,res.get(p.tx+','+p.y)??0]),...skipped.map(p=>[p.tx,p.y,-1])];
-  const prevId=S.hist.filter(h=>h.type==='auto'&&h.eye===eye&&h.mode===mode&&h.sp===L.sp).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null;
   const rec={id:'a'+Date.now().toString(36),type:'auto',mode,date:new Date().toISOString(),eye,sp:L.sp,size:S.asize,con:S.acon,points,
-    fl:flPos?fl:[0,0],fp,spur,dist:S.dist,ppm:S.ppm,dur:Math.round((Date.now()-t0)/1000),bsRef:bsRef?{x:+bsRef.x.toFixed(2),y:+bsRef.y.toFixed(2),w:+bsRef.w.toFixed(2),h:+bsRef.h.toFixed(2),src:bsRef.src}:null,
-    screen:[vw,vh]};
-  S.hist.push(rec);S.selAuto=rec.id;S.cmpAuto=prevId;S.tab='auto';all();
+    fl:flPos?fl:[0,0],fp,spur,dist:S.dist,ppm:S.ppm,dur:Math.round((Date.now()-t0)/1000),
+    bsRef:bsRef?{x:+bsRef.x.toFixed(2),y:+bsRef.y.toFixed(2),w:+bsRef.w.toFixed(2),h:+bsRef.h.toFixed(2),src:bsRef.src}:null,screen:[vw,vh]};
+  S.hist.push(rec);S.sel=rec.id;S.cmpSel=null;S.view='res';all();scrollTo(0,0);
   toast(autoStats(rec).reliable?'Test kaydedildi':'Test kaydedildi, ama güvenilirliği düşük');
 }
 async function finishOverlay(wake){
@@ -771,10 +723,9 @@ async function finishOverlay(wake){
 $('start').onclick=runTest;
 
 /* ---------- başlangıç ---------- */
-$('dist').value=S.dist;$('ppm').value=S.ppm;$('showPrev').checked=S.showPrev;cal();setTool(S.tool);
-new ResizeObserver(()=>{if(S.tab==='manual')renderManual()}).observe(grid);
+$('dist').value=S.dist;$('ppm').value=S.ppm;setTool(S.tool);
+new ResizeObserver(()=>{if(S.view==='test'&&S.tmode==='manual')renderManMini()}).observe(grid);
 all();
-// test için dışa açık saf fonksiyonlar
-window.__GA={autoStats,manualStats,layout,inBS,repeatability,BS_REF};
+window.__ODAK={autoStats,manualStats,layout,inBS,repeatability,BS_REF};
 })();
 </script>

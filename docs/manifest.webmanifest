@@ -1,9 +1,10 @@
 {
-  "name": "Görme Alanı Haritası",
-  "short_name": "Görme Alanı",
+  "name": "Odak · Görme Alanı Takibi",
+  "short_name": "Odak",
   "lang": "tr",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#eef1ef",
-  "theme_color": "#0f6e62"
+  "background_color": "#0d1113",
+  "theme_color": "#0d1113",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }
