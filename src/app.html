@@ -227,7 +227,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
           <b>Kör nokta doğrulama</b><span>Uygulamanın doğru ölçtüğünü kanıtlar. 4 dk.</span></button>
         <button class="mode" id="mMan" aria-pressed="false">
           <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="5" width="30" height="30" rx="3" fill="none" stroke="var(--muted)" stroke-width="1.5"/><path d="M5 15h30M5 25h30M15 5v30M25 5v30" stroke="var(--line)"/><rect x="15" y="25" width="10" height="10" fill="var(--unseen)"/><path d="M20 17v6M17 20h6" stroke="var(--accent)" stroke-width="2"/></svg>
-          <b>Elle işaretleme</b><span>Harf ızgarasında kendin boyarsın.</span></button>
+          <b>Elle işaretleme</b><span>Görmediğin harfleri sonradan boyarsın.</span></button>
       </div>
 
       <div id="autoBox">
@@ -253,6 +253,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       </div>
 
       <div id="manBox" hidden>
+        <ol class="steps"><li>Bir gözünü kapat, ortadaki sarı artıya bak. Gözünü kaydırmadan hangi harflerin kaybolduğuna ya da bulanıklaştığına dikkat et.</li><li>Sonra gözünü serbest bırak ve o harfleri parmağınla ya da fareyle boya: kaybolanları “Görmüyorum”, bulanık olanları “Bulanık” ile.</li><li>Görülmeyen alan boyanır. Sınırı hafızadan işaretlediğin için sonuç yaklaşıktır; daha kesin ölçüm için Tam alan testini kullan.</li></ol>
         <div class="row">
           <div class="seg" role="group" aria-label="Fırça">
             <button class="btn" id="tU" aria-pressed="true"><i class="sw u"></i>Görmüyorum</button>
