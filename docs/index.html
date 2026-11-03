@@ -187,6 +187,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .perim .dot{position:absolute;border-radius:50%;pointer-events:none}
 .perim .msg{position:absolute;left:50%;top:calc(24px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));text-align:center;font-size:15px;line-height:1.55}
 .perim .msg b{color:#eaeaea}
+.perim.light{--perim-bg:#ffffff;--perim-fix:#1a1a1a;--perim-txt:#555}
+.perim.light .msg b{color:#111}
+.perim.light .prog{background:#eee}.perim.light .prog i{background:#bbb}
+.perim.light .pbtn{border-color:#ccc;color:#777}
+.perim.light .cnt{color:#888}
 .perim .prog{position:absolute;left:0;right:0;bottom:0;height:5px;background:#303030}
 .perim .prog i{display:block;height:100%;width:0;background:#777}
 .perim .pbtn{position:absolute;right:calc(12px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));background:none;border:1px solid #444;color:#888;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
@@ -245,8 +250,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
           <div class="form">
             <label for="asp" id="aspL">Nokta aralığı</label>
             <select id="asp"><option value="3">3° · hızlı</option><option value="2">2° · detaylı</option></select>
-            <label for="asize">Uyaran boyutu</label>
-            <select id="asize"><option value="0.43">Goldmann III · 0,43°</option><option value="0.86">Goldmann IV · 0,86°</option></select>
+            <label for="abg">Zemin ve nokta</label>
+            <select id="abg"><option value="light">Beyaz zemin, kırmızı nokta</option><option value="dark">Koyu zemin, beyaz nokta</option></select>
+            <label for="asize">Nokta boyutu</label>
+            <select id="asize"><option value="0.11">Çok küçük · Goldmann I · 0,11°</option><option value="0.22">Küçük · Goldmann II · 0,22°</option><option value="0.43">Orta · Goldmann III · 0,43°</option><option value="0.86">Büyük · Goldmann IV · 0,86°</option></select>
             <label for="acon">Parlaklık</label>
             <select id="acon"><option value="hi">Yüksek</option><option value="mid">Orta</option><option value="lo">Düşük</option></select>
           </div>
@@ -367,14 +374,15 @@ const mean=a=>a.reduce((s,v)=>s+v,0)/(a.length||1);
 const sd=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1))};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const BS_REF={x:15.5,y:-1.5,w:5.5,h:7.5};BS_REF.area=Math.PI/4*BS_REF.w*BS_REF.h;
-const CON={hi:'#f2f2f2',mid:'#9c9c9c',lo:'#5e5e5e'},CON_TR={hi:'yüksek',mid:'orta',lo:'düşük'};
+const CON={dark:{hi:'#f2f2f2',mid:'#9c9c9c',lo:'#5e5e5e'},light:{hi:'#e00000',mid:'#ef5a5a',lo:'#f6a5a5'}},BG_TR={light:'beyaz zemin, kırmızı nokta',dark:'koyu zemin, beyaz nokta'},CON_TR={hi:'yüksek',mid:'orta',lo:'düşük'};
 const EYE_TR={R:'sağ göz',L:'sol göz'};
 const TYPE_TR=h=>h.type==='manual'?'Elle':h.mode==='bs'?'Kör nokta':'Tam alan '+h.sp+'°';
 
 /* ---------- durum ---------- */
-let S={eye:'R',tool:2,dist:40,ppm:3.78,mask:new Array(N*N).fill(0),hist:[],view:'test',tmode:'full',asp:3,asize:0.43,acon:'mid',sel:null,cmpSel:null};
+let S={eye:'R',tool:2,dist:40,ppm:3.78,mask:new Array(N*N).fill(0),hist:[],view:'test',tmode:'full',asp:3,asize:0.22,acon:'hi',abg:'light',sel:null,cmpSel:null};
 try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);Object.assign(S,o);if(o.amode&&!o.tmode)S.tmode=o.tab==='manual'?'manual':o.amode;if(o.selAuto&&!o.sel)S.sel=o.selAuto}}catch(e){}
 S.hist.forEach(h=>{if(!h.type)h.type='manual'});
+if(!S.abg){S.abg='light';S.asize=0.22;S.acon='hi'}
 if(!['test','res','hist','set'].includes(S.view))S.view='test';
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 
@@ -496,11 +504,11 @@ function renderTest(){
   $('autoBox').hidden=m==='manual';$('manBox').hidden=m!=='manual';
   $('tEyebrow').textContent=`Yeni test · ${EYE_TR[S.eye]}`;
   if(m==='manual'){paintGrid();renderManMini();return}
-  $('asp').value=String(S.asp);$('asize').value=String(S.asize);$('acon').value=S.acon;$('asp').hidden=$('aspL').hidden=m!=='full';
+  $('asp').value=String(S.asp);$('asize').value=String(S.asize);$('abg').value=S.abg;$('acon').value=S.acon;$('asp').hidden=$('aspL').hidden=m!=='full';
   const L=layout(m,S.eye,window.screen?.width||innerWidth,window.screen?.height||innerHeight);
   const n=L.pts.filter(p=>!(m==='full'&&inBS(p.tx,p.y,userBS(S.eye)))).length,mins=Math.max(1,Math.round(n*1.25*1.15*(1+1/6)/60));
   const cv=$('cover');
-  if(m==='full'){cv.className='readout';cv.textContent=`${S.dist} cm · yatay ±${fmt(L.ext.x0,0)}° · dikey ±${fmt(L.ext.y,0)}° · ${n} nokta · ~${mins} dk`}
+  if(m==='full'){cv.className='readout';cv.textContent=`${S.dist} cm · yatay ±${fmt(L.ext.x0,0)}° · dikey ±${fmt(L.ext.y,0)}° · ${n} nokta · ~${mins} dk · ${BG_TR[S.abg]}, ${fmt(S.asize,2)}°`}
   else{const ok=L.pts.length>=L.want*.9;cv.className='readout'+(ok?'':' bad');
     cv.textContent=ok?`${S.dist} cm · temporal 10–21°, −8…+5° bölgesi · ${L.pts.length} nokta, 1° aralık · ~${mins} dk`:`Kör nokta bölgesinin yalnızca ${L.pts.length}/${L.want} noktası ekrana sığıyor. Ekrana biraz yaklaş ya da daha geniş bir ekran kullan.`}
   const other=S.eye==='R'?'Sol':'Sağ';
@@ -542,7 +550,7 @@ function renderRes(){
       <h3>Güvenilirlik</h3><div class="tscroll"><table><tbody>
       <tr><td>Sabitleme kaybı</td><td class="n">${flTxt}</td><td class="n">${s.flr===null?'ölçülemedi':fmt(s.flr*100,0)+'%'}</td><td class="n">sınır 20%</td></tr>
       <tr><td>Yanlış pozitif</td><td class="n">${h.fp[0]}/${h.fp[1]}</td><td class="n">${fmt(s.fpr*100,0)}%</td><td class="n">sınır 15%</td></tr></tbody></table></div>
-      <p class="note">${s.u?`Lekenin ağırlık merkezi ${dirText(s.cx,s.cy)}; en uzak görülmeyen nokta ${fmt(s.maxE)}°.`:'Görülmeyen nokta yok.'} Kör nokta (${h.bsRef?.src||'literatür'}) alana katılmadı.${h.partial?' Test yarıda bitirildi; boş kalan bölgeler test edilmedi.':''} ${Math.round(h.dur/60)} dk · ${CON_TR[h.con]||''} parlaklık · ${h.dist} cm.</p>`;
+      <p class="note">${s.u?`Lekenin ağırlık merkezi ${dirText(s.cx,s.cy)}; en uzak görülmeyen nokta ${fmt(s.maxE)}°.`:'Görülmeyen nokta yok.'} Kör nokta (${h.bsRef?.src||'literatür'}) alana katılmadı.${h.partial?' Test yarıda bitirildi; boş kalan bölgeler test edilmedi.':''} ${Math.round(h.dur/60)} dk · ${BG_TR[h.bg||'dark']} · nokta ${fmt(h.size,2)}° · ${CON_TR[h.con]||''} parlaklık · ${h.dist} cm.</p>`;
   }else{
     const b=s.bs,R=BS_REF;
     html+=b?`<div class="big"><div><b>${fmt(b.x)}°</b><small>merkez, temporal (lit. ${fmt(R.x)}°)</small></div><div><b>${fmt(b.w,1)}×${fmt(b.h,1)}</b><small>boyut ° (lit. ${fmt(R.w)}×${fmt(R.h)})</small></div><div><b>${fmt(Math.hypot(b.x-R.x,b.y-R.y))}°</b><small>merkez hatası</small></div></div>
@@ -578,7 +586,7 @@ function renderRes(){
       :`<span class="status ns">GÜRÜLTÜ İÇİNDE</span><p>Alan farkı ${fmt(Math.abs(dA),0)}°²; bu ayarda ölçüm gürültüsü ±${fmt(rep.cor,0)}°². Gerçek bir değişim sayılmaz.</p>`)
     :'<span class="status ns">EŞİK HENÜZ YOK</span><p>Aynı gün bu ayarla 3 güvenilir test yapınca ölçüm gürültüsü hesaplanır ve fark burada yorumlanır.</p>';
   const days=Math.round((new Date(h.date)-new Date(prev.date))/864e5);
-  const warn=h.type==='auto'&&(!s.reliable||!ps.reliable)?'<p style="color:var(--warn)">Testlerden biri şüpheli; farkı temkinli yorumla.</p>':'';
+  const warn=(h.type==='auto'&&(!s.reliable||!ps.reliable)?'<p style="color:var(--warn)">Testlerden biri şüpheli; farkı temkinli yorumla.</p>':'')+(h.type==='auto'&&(h.size!==prev.size||(h.bg||'dark')!==(prev.bg||'dark')||h.con!==prev.con)?'<p style="color:var(--warn)">İki test farklı nokta boyutu, zemin ya da parlaklıkla yapılmış. Küçük nokta lekeyi daha büyük gösterir; karşılaştırma için aynı ayarı kullan.</p>':'');
   $('cmpOut').innerHTML=`<div class="tscroll"><table><thead><tr><th></th><th class="n">ÖNCEKİ</th><th class="n">BU TEST</th><th class="n">FARK</th></tr></thead><tbody>
     <tr><td>Görülmeyen %</td><td class="n">${fmt(ps.pu)}</td><td class="n">${fmt(s.pu)}</td><td class="n">${dlt(ps.pu,s.pu)}</td></tr>
     <tr><td>Alan °²</td><td class="n">${fmt(prA,0)}</td><td class="n">${fmt(curA,0)}</td><td class="n">${dlt(prA,curA,0)}</td></tr>
@@ -628,7 +636,7 @@ document.querySelectorAll('nav.views button').forEach(b=>b.onclick=()=>{S.view=b
 const setEye=e=>{S.eye=e;S.sel=null;S.cmpSel=null;all()};
 $('eyeR').onclick=()=>setEye('R');$('eyeL').onclick=()=>setEye('L');
 $('mFull').onclick=()=>{S.tmode='full';all()};$('mBS').onclick=()=>{S.tmode='bs';all()};$('mMan').onclick=()=>{S.tmode='manual';all()};
-$('asp').onchange=e=>{S.asp=+e.target.value;all()};$('asize').onchange=e=>{S.asize=+e.target.value;all()};$('acon').onchange=e=>{S.acon=e.target.value;all()};
+$('asp').onchange=e=>{S.asp=+e.target.value;all()};$('asize').onchange=e=>{S.asize=+e.target.value;all()};$('abg').onchange=e=>{S.abg=e.target.value;all()};$('acon').onchange=e=>{S.acon=e.target.value;all()};
 $('cmp').onchange=e=>{S.cmpSel=e.target.value;all()};
 $('dist').oninput=e=>{const v=+e.target.value;if(v>=15&&v<=150){S.dist=v;all()}};
 $('ppm').oninput=e=>{S.ppm=+e.target.value;all()};
@@ -683,7 +691,7 @@ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement
 async function waitResume(){while(RUN.paused&&!RUN.abort)await new Promise(r=>RUN.resume=r)}
 async function runTest(){
   if(RUN)return;
-  ov.hidden=false;pauseEl.hidden=true;bar.style.width='0';
+  ov.classList.toggle('light',S.abg==='light');ov.hidden=false;pauseEl.hidden=true;bar.style.width='0';
   try{await ov.requestFullscreen?.()}catch(e){}
   let wake=null;try{wake=await navigator.wakeLock?.request('screen')}catch(e){}
   await sleep(350);
@@ -696,7 +704,7 @@ async function runTest(){
   const Q=shuffle(tested.map(p=>({k:'stim',p,re:false})));
   const ins=t=>Q.splice(3+Math.floor(Math.random()*Math.max(1,Q.length-3)),0,t);
   for(let i=0;i<nC;i++){ins({k:'fp'});if(flPos)ins({k:'fl'})}
-  const size=Math.max(3,deg2px(S.asize));dot.style.width=dot.style.height=size+'px';dot.style.background=CON[S.acon];
+  const size=Math.max(2,deg2px(S.asize));dot.style.width=dot.style.height=size+'px';dot.style.background=CON[S.abg][S.acon];
   fixEl.style.left=L.fx+'px';fixEl.style.top=L.fy+'px';
   RUN={paused:false,abort:false,spur:0,win:null,waitStart:null};
   const eyeTr=eye==='R'?'Sağ':'Sol';
@@ -727,7 +735,7 @@ async function runTest(){
   if(aborted){toast('Test iptal edildi, kaydedilmedi');return}
   const partial=!!RUN_finish;
   const points=[...tested.map(p=>{const k=p.tx+','+p.y;return [p.tx,p.y,res.has(k)?res.get(k):(partial?-2:0)]}),...skipped.map(p=>[p.tx,p.y,-1])];
-  const rec={id:'a'+Date.now().toString(36),type:'auto',mode,date:new Date().toISOString(),eye,sp:L.sp,size:S.asize,con:S.acon,points,
+  const rec={id:'a'+Date.now().toString(36),type:'auto',mode,date:new Date().toISOString(),eye,sp:L.sp,size:S.asize,con:S.acon,bg:S.abg,points,
     fl:flPos?fl:[0,0],fp,spur,dist:S.dist,ppm:S.ppm,dur:Math.round((Date.now()-t0)/1000),
     partial,bsRef:bsRef?{x:+bsRef.x.toFixed(2),y:+bsRef.y.toFixed(2),w:+bsRef.w.toFixed(2),h:+bsRef.h.toFixed(2),src:bsRef.src}:null,screen:[vw,vh]};
   S.hist.push(rec);S.sel=rec.id;S.cmpSel=null;S.view='res';all();scrollTo(0,0);
