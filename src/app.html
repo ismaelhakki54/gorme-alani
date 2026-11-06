@@ -165,6 +165,14 @@ details summary{cursor:pointer;color:var(--muted)}
 .cal{height:56px;border:2px solid var(--accent);border-radius:7px;display:grid;place-items:center;color:var(--muted);font-family:var(--f-mono);font-size:.8rem;max-width:100%;margin-top:10px}
 input[type=range]{width:100%;accent-color:var(--accent)}
 
+.consent{position:fixed;inset:0;z-index:150;background:var(--bg);overflow-y:auto;padding:calc(24px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.consent .box{max-width:640px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--warn);border-radius:0 0 14px 14px;padding:22px}
+.consent h2{color:var(--warn)}
+.consent p,.disc p{margin:0 0 12px;font-size:.95rem;max-width:65ch}
+.consent label{display:flex;gap:10px;align-items:flex-start;margin:18px 0;font-size:.95rem;cursor:pointer}
+.consent input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);flex:none;margin-top:2px}
+.consent .go[disabled]{opacity:.4;cursor:not-allowed}
+.disc p{color:var(--muted);font-size:.86rem}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200;max-width:calc(100% - 32px)}
 @media (min-width:760px){.toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))}}
 .toast.on{opacity:1}
@@ -326,8 +334,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         <p class="eyebrow">Mesafe</p>
         <div class="row"><label for="dist" class="note" style="margin:0">Göz–ekran mesafesi</label><input type="number" id="dist" min="15" max="150" step="1" value="40"><span class="note" style="margin:0">cm</span></div>
         <p class="note">Test boyunca mesafeyi sabit tut. Ekranın kenarına bağlı bir ip ya da cetvel işini kolaylaştırır.</p>
-        <h3>Hakkında</h3>
-        <p class="note">Odak bir ev takibi ve Ar-Ge aracıdır, tanı koymaz. Haritada ani büyüme, yeni bir leke ya da düz çizgilerde eğrilik fark edersen göz doktoruna başvur.</p>
+        <h3>Önemli bilgilendirme</h3>
+        <div class="disc"><p>Bu uygulama, kişisel görme alanı performansının değerlendirilmesi ve zaman içerisindeki değişimlerinin takip edilmesine yardımcı olmak amacıyla geliştirilmiştir.</p>
+<p><b>Uygulama tarafından sunulan testler ve sonuçlar tanı amaçlı değildir.</b> Herhangi bir göz hastalığının teşhis edilmesi, dışlanması, tedavisinin planlanması veya klinik takibi amacıyla kullanılamaz. Uygulama, profesyonel göz muayenesinin ve hekim tarafından gerçekleştirilen klinik testlerin yerine geçmez.</p>
+<p>Test sonuçlarının normal görünmesi, herhangi bir göz hastalığının bulunmadığını garanti etmez. Benzer şekilde, sonuçlarda saptanan farklılıklar tek başına bir hastalık göstergesi olarak değerlendirilmemelidir.</p>
+<p><b>Görmenizde herhangi bir sorun hissetmeseniz dahi göz sağlığınızı korumak için düzenli aralıklarla göz hastalıkları ve sağlığı uzmanına muayene olunuz.</b> Test sonuçlarınız veya görmenizle ilgili herhangi bir şüpheniz olduğunda göz doktorunuza danışınız.</p>
+<p>Göz sağlığınız için bu uygulamayı yalnızca kişisel farkındalık ve bilgilendirme amacıyla kullanınız.</p>
+<p><b>Unutmayınız: Hiçbir dijital test, kapsamlı bir göz muayenesinin yerini tutamaz.</b></p></div>
+        <p class="note" id="consentInfo"></p>
         <p class="note">Yöntem: eşik üstü statik perimetri, Heijl-Krakau sabitleme kontrolü, yanlış pozitif yoklaması, tekrarlanabilirlik katsayısı (2,77 × SD).</p>
       </section>
     </div>
@@ -348,6 +362,18 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <button id="ovAbort">Testi iptal et</button>
   </div>
 </div>
+<div class="consent" id="consent" role="dialog" aria-modal="true" aria-labelledby="consentT" hidden><div class="box">
+<p class="eyebrow">Odak · görme alanı takibi</p>
+<h2 id="consentT">Önemli bilgilendirme: görme sağlığınız için</h2>
+<p>Bu uygulama, kişisel görme alanı performansının değerlendirilmesi ve zaman içerisindeki değişimlerinin takip edilmesine yardımcı olmak amacıyla geliştirilmiştir.</p>
+<p><b>Uygulama tarafından sunulan testler ve sonuçlar tanı amaçlı değildir.</b> Herhangi bir göz hastalığının teşhis edilmesi, dışlanması, tedavisinin planlanması veya klinik takibi amacıyla kullanılamaz. Uygulama, profesyonel göz muayenesinin ve hekim tarafından gerçekleştirilen klinik testlerin yerine geçmez.</p>
+<p>Test sonuçlarının normal görünmesi, herhangi bir göz hastalığının bulunmadığını garanti etmez. Benzer şekilde, sonuçlarda saptanan farklılıklar tek başına bir hastalık göstergesi olarak değerlendirilmemelidir.</p>
+<p><b>Görmenizde herhangi bir sorun hissetmeseniz dahi göz sağlığınızı korumak için düzenli aralıklarla göz hastalıkları ve sağlığı uzmanına muayene olunuz.</b> Test sonuçlarınız veya görmenizle ilgili herhangi bir şüpheniz olduğunda göz doktorunuza danışınız.</p>
+<p>Göz sağlığınız için bu uygulamayı yalnızca kişisel farkındalık ve bilgilendirme amacıyla kullanınız.</p>
+<p><b>Unutmayınız: Hiçbir dijital test, kapsamlı bir göz muayenesinin yerini tutamaz.</b></p>
+<label for="consentChk"><input type="checkbox" id="consentChk"> Bu bilgilendirmeyi okudum ve anladım. Uygulamanın tanı amaçlı olmadığını kabul ediyorum.</label>
+<button class="go" id="consentGo" disabled>Kabul et ve devam et</button>
+</div></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -378,6 +404,8 @@ S.hist.forEach(h=>{if(!h.type)h.type='manual'});
 if(!S.abg){S.abg='light';S.asize=0.22;S.acon='hi'}
 if(!['test','res','hist','set'].includes(S.view))S.view='test';
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const CONSENT_V=1;
+function showConsent(){const c=$('consent');c.hidden=!(S.consent&&S.consent.v===CONSENT_V)?false:true;}
 
 /* ---------- örnek kayıtlar ---------- */
 function exMask(cells){const m=new Array(N*N).fill(0);cells.forEach(([r,c,v])=>m[r*N+c]=v);return m.join('')}
@@ -575,8 +603,8 @@ function renderRes(){
   const curA=h.mode==='bs'?(s.bs?.area||0):s.area,prA=h.mode==='bs'?(ps.bs?.area||0):ps.area,dA=curA-prA;
   const rep=h.type==='auto'?repeatability(h.eye,h.mode,h.sp,h.mode==='bs'?(x=>x.bs?.area):(x=>x.area)):null;
   const verdict=h.type==='manual'?'<span class="status ns">ELLE · ANLAMLILIK YOK</span><p>Elle işaretlemede ölçüm gürültüsü bilinmediği için fark yorumlanamaz. Bunun için otomatik testi kullan.</p>'
-    :rep?(Math.abs(dA)>rep.cor?`<span class="status sig">ANLAMLI DEĞİŞİM</span><p>Alan farkı ${fmt(Math.abs(dA),0)}°²; bu ayarda ölçüm gürültüsü ±${fmt(rep.cor,0)}°². Fark gürültüden büyük.</p>`
-      :`<span class="status ns">GÜRÜLTÜ İÇİNDE</span><p>Alan farkı ${fmt(Math.abs(dA),0)}°²; bu ayarda ölçüm gürültüsü ±${fmt(rep.cor,0)}°². Gerçek bir değişim sayılmaz.</p>`)
+    :rep?(Math.abs(dA)>rep.cor?`<span class="status sig">BELİRGİN FARK</span><p>Alan farkı ${fmt(Math.abs(dA),0)}°²; bu ayarda ölçüm oynaması ±${fmt(rep.cor,0)}°². Fark ölçüm oynamasından büyük. Bu bir tanı değildir; göz doktorunuza danışınız.</p>`
+      :`<span class="status ns">ÖLÇÜM OYNAMASI İÇİNDE</span><p>Alan farkı ${fmt(Math.abs(dA),0)}°²; bu ayarda ölçüm oynaması ±${fmt(rep.cor,0)}°². Fark ölçümün kendi oynamasından büyük değil. Görmenizle ilgili bir şüpheniz varsa göz doktorunuza danışınız.</p>`)
     :'<span class="status ns">EŞİK HENÜZ YOK</span><p>Aynı gün bu ayarla 3 güvenilir test yapınca ölçüm gürültüsü hesaplanır ve fark burada yorumlanır.</p>';
   const days=Math.round((new Date(h.date)-new Date(prev.date))/864e5);
   const warn=(h.type==='auto'&&(!s.reliable||!ps.reliable)?'<p style="color:var(--warn)">Testlerden biri şüpheli; farkı temkinli yorumla.</p>':'')+(h.type==='auto'&&(h.size!==prev.size||(h.bg||'dark')!==(prev.bg||'dark')||h.con!==prev.con)?'<p style="color:var(--warn)">İki test farklı nokta boyutu, zemin ya da parlaklıkla yapılmış. Küçük nokta lekeyi daha büyük gösterir; karşılaştırma için aynı ayarı kullan.</p>':'');
@@ -615,7 +643,7 @@ function renderHist(){
       <div class="meta"><div>${dtstr(h.date)}<span class="chip">${TYPE_TR(h)}</span>${h.ex?'<span class="chip ex">Örnek</span>':''}</div><div>${meta}${h.note&&!h.ex?' · '+esc(h.note):''}</div></div>
       <div class="acts"><button class="btn sm" data-a="load" data-id="${h.id}">Aç</button><button class="btn sm danger" data-a="del" data-id="${h.id}">Sil</button></div></div>`}).join('');
 }
-function renderSet(){$('calbox').style.width=(85.6*S.ppm)+'px';$('scaleInfo').textContent=`Bu ayarla ${S.dist} cm'de 1 cm ekran ≈ ${fmt(px2deg(10*S.ppm),2)}°.`}
+function renderSet(){$('consentInfo').textContent=S.consent?`Bilgilendirmeyi ${dtstr(S.consent.date)} tarihinde kabul ettiniz.`:'';$('calbox').style.width=(85.6*S.ppm)+'px';$('scaleInfo').textContent=`Bu ayarla ${S.dist} cm'de 1 cm ekran ≈ ${fmt(px2deg(10*S.ppm),2)}°.`}
 function all(){
   ['test','res','hist','set'].forEach(v=>{$('v-'+v).hidden=S.view!==v});
   document.querySelectorAll('nav.views button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===S.view?'page':'false'));
@@ -684,6 +712,7 @@ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement
 async function waitResume(){while(RUN.paused&&!RUN.abort)await new Promise(r=>RUN.resume=r)}
 async function runTest(){
   if(RUN)return;
+  if(!(S.consent&&S.consent.v===CONSENT_V)){showConsent();return}
   ov.classList.toggle('light',S.abg==='light');ov.hidden=false;pauseEl.hidden=true;bar.style.width='0';
   try{await ov.requestFullscreen?.()}catch(e){}
   let wake=null;try{wake=await navigator.wakeLock?.request('screen')}catch(e){}
@@ -745,6 +774,9 @@ $('start').onclick=runTest;
 $('dist').value=S.dist;$('ppm').value=S.ppm;setTool(S.tool);
 new ResizeObserver(()=>{if(S.view==='test'&&S.tmode==='manual')renderManMini()}).observe(grid);
 all();
+showConsent();
+$('consentChk').onchange=e=>{$('consentGo').disabled=!e.target.checked};
+$('consentGo').onclick=()=>{if(!$('consentChk').checked)return;S.consent={v:CONSENT_V,date:new Date().toISOString()};persist();$('consent').hidden=true;renderSet()};
 window.__ODAK={autoStats,manualStats,layout,inBS,repeatability,BS_REF};
 })();
 </script>
